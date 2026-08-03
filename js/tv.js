@@ -4,7 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Repete o sinal sonoro 3 vezes antes do anúncio de voz.
+ *            Executa 1 sinal sonoro (gingle) e REPETE O ANÚNCIO DE VOZ 3 VEZES.
  * ============================================================================
  */
 
@@ -38,7 +38,7 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (3 toques de som).');
+    console.log('[ChamaSenha TV]: Painel da TV inicializado (Voz com 3 repetições).');
   }
 
   bindEvents() {
@@ -193,9 +193,9 @@ class ChamaSenhaTV {
 
     if (triggerAlerts && state.senhaAtualText !== '0000') {
       this.animateCard();
-      this.tocarGingle3Vezes(() => {
+      this.tocarGingle(() => {
         if (this.vozHabilitada) {
-          this.anunciarVoz(state.senhaAtualText, state.guicheAtual);
+          this.anunciarVoz3Vezes(state.senhaAtualText, state.guicheAtual, 3);
         }
       });
     }
@@ -210,48 +210,39 @@ class ChamaSenhaTV {
   }
 
   /**
-   * Repete o gingle sonoro 3 vezes em sequência antes de chamar o callback de voz
+   * Toca o gingle sonoro inicial uma vez
    */
-  tocarGingle3Vezes(onCompleteCallback) {
+  tocarGingle(onCompleteCallback) {
     if (!this.dom.audioChamada || !this.somHabilitado) {
       if (onCompleteCallback) onCompleteCallback();
       return;
     }
 
-    let toquesRestantes = 3;
+    this.dom.audioChamada.currentTime = 0;
+    const playPromise = this.dom.audioChamada.play();
 
-    const tocarUm = () => {
-      if (toquesRestantes <= 0) {
-        if (onCompleteCallback) setTimeout(onCompleteCallback, 300);
-        return;
-      }
-
-      toquesRestantes--;
-      this.dom.audioChamada.currentTime = 0;
-      
-      const playPromise = this.dom.audioChamada.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            this.dom.audioChamada.onended = () => {
-              this.dom.audioChamada.onended = null;
-              setTimeout(tocarUm, 250);
-            };
-          })
-          .catch((err) => {
-            console.warn('[TV Audio]: Bloqueio de autoplay no navegador:', err);
-            if (onCompleteCallback) onCompleteCallback();
-          });
-      } else {
-        setTimeout(tocarUm, 1200);
-      }
-    };
-
-    tocarUm();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          this.dom.audioChamada.onended = () => {
+            this.dom.audioChamada.onended = null;
+            if (onCompleteCallback) setTimeout(onCompleteCallback, 300);
+          };
+        })
+        .catch((err) => {
+          console.warn('[TV Audio]: Bloqueio de autoplay no navegador:', err);
+          if (onCompleteCallback) onCompleteCallback();
+        });
+    } else {
+      if (onCompleteCallback) setTimeout(onCompleteCallback, 1000);
+    }
   }
 
-  anunciarVoz(senhaStr, guicheStr) {
-    if (!this.speechSynth) return;
+  /**
+   * Anuncia a mensagem de voz e REPETE ELA 3 VEZES em sequência com pequena pausa
+   */
+  anunciarVoz3Vezes(senhaStr, guicheStr, repeticoes = 3) {
+    if (!this.speechSynth || !this.vozHabilitada) return;
 
     this.speechSynth.cancel();
 
@@ -265,12 +256,33 @@ class ChamaSenhaTV {
       textoVoz = `Senha, ${senhaStr.split('').join(' ')}${guicheFormatado}`;
     }
 
-    const utterance = new SpeechSynthesisUtterance(textoVoz);
-    utterance.lang = 'pt-BR';
-    utterance.rate = 0.92;
-    utterance.pitch = 1.0;
+    let count = 0;
 
-    this.speechSynth.speak(utterance);
+    const falarUmaVez = () => {
+      if (count >= repeticoes) return;
+      count++;
+
+      const utterance = new SpeechSynthesisUtterance(textoVoz);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.92;
+      utterance.pitch = 1.0;
+
+      utterance.onend = () => {
+        if (count < repeticoes) {
+          setTimeout(falarUmaVez, 400); // Pausa estratégica de 400ms entre toques
+        }
+      };
+
+      utterance.onerror = () => {
+        if (count < repeticoes) {
+          setTimeout(falarUmaVez, 400);
+        }
+      };
+
+      this.speechSynth.speak(utterance);
+    };
+
+    falarUmaVez();
   }
 
   updateConnectionStatus(isOnline, text) {
