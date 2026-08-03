@@ -117,12 +117,17 @@
       </div>
     </section>
 
-  </main>
+    <!-- Lista Visual de Pacientes Cadastrados Aguardando para este Consultório -->
+    <section class="secondary-card doctor-queue-list-card" aria-label="Lista de Pacientes Cadastrados">
+      <h3 class="card-title">SENHAS CADASTRADAS PARA ESTE CONSULTÓRIO (<span id="doctorQueueCount">0</span>)</h3>
+      <p class="queue-instruction-hint">Clique em uma senha abaixo para chamá-la diretamente:</p>
+      
+      <div id="doctorQueueContainer" class="doctor-queue-container">
+        <p class="queue-empty-text">Nenhuma senha cadastrada aguardando para este consultório.</p>
+      </div>
+    </section>
 
-  <!-- Elemento de Áudio Sonoro -->
-  <audio id="audioChamada" preload="auto">
-    <source src="audio/chamada.wav" type="audio/wav" />
-  </audio>
+  </main>
 
   <!-- Rodapé do Consultório -->
   <footer class="app-footer" role="contentinfo">

@@ -4,8 +4,8 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel do Médico/Consultório (atendimento.html).
- *            Dispara a chamada dos próximos pacientes direcionados para a sala atual,
- *            solicita repetições de chamada e atualiza os contadores de fila.
+ *            Sem emissão de áudio local (áudio executado exclusivamente na TV).
+ *            Listagem em tempo real de senhas cadastradas para o consultório.
  * ============================================================================
  */
 
@@ -20,6 +20,8 @@ class ChamaSenhaDoctorApp {
       doctorRoomSelect: document.getElementById('doctorRoomSelect'),
       doctorRoomPill: document.getElementById('doctorRoomPill'),
       waitingQueueCount: document.getElementById('waitingQueueCount'),
+      doctorQueueCount: document.getElementById('doctorQueueCount'),
+      doctorQueueContainer: document.getElementById('doctorQueueContainer'),
       senhaAtualNumero: document.getElementById('doctorSenhaAtualNumero'),
       displayTypeBadge: document.getElementById('doctorDisplayTypeBadge'),
       displayCard: document.getElementById('doctorDisplayCard'),
@@ -27,8 +29,7 @@ class ChamaSenhaDoctorApp {
       btnRepeat: document.getElementById('btnDoctorRepeat'),
       statusDot: document.getElementById('statusDot'),
       statusText: document.getElementById('statusText'),
-      themeToggleBtn: document.getElementById('themeToggleBtn'),
-      audioChamada: document.getElementById('audioChamada')
+      themeToggleBtn: document.getElementById('themeToggleBtn')
     };
 
     this.init();
@@ -42,7 +43,7 @@ class ChamaSenhaDoctorApp {
       this.dom.doctorRoomSelect.value = this.selectedRoom;
     }
     this.updateRoomLabel();
-    console.log(`[ChamaSenha Consultório]: Inicializado na sala ${this.selectedRoom}.`);
+    console.log(`[ChamaSenha Consultório]: Inicializado na sala ${this.selectedRoom} (Sem som local).`);
   }
 
   bindEvents() {
@@ -122,7 +123,6 @@ class ChamaSenhaDoctorApp {
   }
 
   requestStateRefresh() {
-    // Escuta estado local via localStorage
     const saved = localStorage.getItem('chama_senha_state_v1');
     if (saved) {
       try {
@@ -134,7 +134,7 @@ class ChamaSenhaDoctorApp {
   renderState(state) {
     if (!state) return;
 
-    // Atualiza número da última senha se a chamada for para esta sala ou atual
+    // Atualiza número da última senha se a chamada for para esta sala
     if (state.guicheAtual === this.selectedRoom && state.senhaAtualText) {
       if (this.dom.senhaAtualNumero) this.dom.senhaAtualNumero.textContent = state.senhaAtualText;
       if (this.dom.displayTypeBadge) {
@@ -142,14 +142,36 @@ class ChamaSenhaDoctorApp {
       }
     }
 
-    // Calcula quantidade de pessoas aguardando para este consultório ou geral
+    // Filtra senhas cadastradas para este consultório ou fila geral
     const queue = state.queue || [];
-    const roomQueueCount = queue.filter(
+    const roomTickets = queue.filter(
       (t) => t.destination === this.selectedRoom || t.destination === 'Geral'
-    ).length;
+    );
 
     if (this.dom.waitingQueueCount) {
-      this.dom.waitingQueueCount.textContent = roomQueueCount;
+      this.dom.waitingQueueCount.textContent = roomTickets.length;
+    }
+    if (this.dom.doctorQueueCount) {
+      this.dom.doctorQueueCount.textContent = roomTickets.length;
+    }
+
+    // Renderiza a lista de senhas cadastradas para o consultório
+    if (this.dom.doctorQueueContainer) {
+      this.dom.doctorQueueContainer.innerHTML = '';
+
+      if (roomTickets.length === 0) {
+        this.dom.doctorQueueContainer.innerHTML =
+          '<p class="queue-empty-text">Nenhuma senha cadastrada aguardando para este consultório.</p>';
+      } else {
+        roomTickets.forEach((t) => {
+          const pill = document.createElement('button');
+          pill.className = `queue-item-pill ${t.type === 'PRIORIDADE' ? 'prioridade' : ''}`;
+          pill.title = `Clique para chamar ${t.id} agora`;
+          pill.innerHTML = `<strong>${t.id}</strong> <span>(${t.type === 'PRIORIDADE' ? 'Prioritária' : 'Normal'})</span>`;
+          pill.addEventListener('click', () => this.chamarSenhaEspecifica(t.id));
+          this.dom.doctorQueueContainer.appendChild(pill);
+        });
+      }
     }
   }
 
@@ -165,7 +187,20 @@ class ChamaSenhaDoctorApp {
     }
 
     this.animateCard();
-    this.tocarGingleLocal();
+  }
+
+  chamarSenhaEspecifica(ticketId) {
+    const payloadData = { destination: this.selectedRoom, specificTicketId: ticketId };
+
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type: 'CALL_NEXT', payload: payloadData }));
+    }
+
+    if (this.broadcastChannel) {
+      this.broadcastChannel.postMessage({ type: 'CALL_NEXT', payload: payloadData });
+    }
+
+    this.animateCard();
   }
 
   repetirChamada() {
@@ -180,7 +215,6 @@ class ChamaSenhaDoctorApp {
     }
 
     this.animateCard();
-    this.tocarGingleLocal();
   }
 
   animateCard() {
@@ -188,14 +222,6 @@ class ChamaSenhaDoctorApp {
       this.dom.displayCard.classList.remove('calling');
       void this.dom.displayCard.offsetWidth;
       this.dom.displayCard.classList.add('calling');
-    }
-  }
-
-  tocarGingleLocal() {
-    if (this.dom.audioChamada) {
-      this.dom.audioChamada.currentTime = 0;
-      const p = this.dom.audioChamada.play();
-      if (p !== undefined) p.catch(() => {});
     }
   }
 

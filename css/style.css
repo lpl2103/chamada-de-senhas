@@ -604,11 +604,11 @@ body {
 }
 
 .doctor-display-card {
-  padding: 3rem 2rem;
+  padding: 2.5rem 2rem;
 }
 
 .doctor-display-number {
-  font-size: clamp(5rem, 16vw, 11rem);
+  font-size: clamp(4.5rem, 14vw, 9.5rem);
 }
 
 .doctor-controls-section {
@@ -629,8 +629,8 @@ body {
 
 .btn-doctor-call {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  padding: 1.75rem 1.5rem;
-  font-size: 1.25rem;
+  padding: 1.5rem;
+  font-size: 1.2rem;
   letter-spacing: 0.03em;
 }
 
@@ -640,10 +640,31 @@ body {
 
 .btn-doctor-repeat {
   background: #2563eb;
-  padding: 1.75rem 1.5rem;
-  font-size: 1.1rem;
+  padding: 1.5rem;
+  font-size: 1.05rem;
 }
 .btn-doctor-repeat:hover { background: #1d4ed8; }
+
+/* Lista de Senhas no Consultório */
+.doctor-queue-list-card {
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+}
+
+.queue-instruction-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  margin-bottom: 0.75rem;
+}
+
+.doctor-queue-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  max-height: 160px;
+  overflow-y: auto;
+}
 
 /* --------------------------------------------------------------------------
    7. MODAL CUSTOMIZADO
