@@ -305,10 +305,27 @@ body {
   font-size: 0.9rem;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);
+  transition: all var(--transition-normal);
 }
 
 .display-type-badge.prioridade {
   background: var(--accent-color);
+  color: #ffffff;
+}
+
+.display-type-badge.in-service {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(2, 132, 199, 0.8);
+}
+
+.display-type-badge.completed {
+  background: #059669;
+  color: #ffffff;
+}
+
+.display-type-badge.absent {
+  background: #dc2626;
   color: #ffffff;
 }
 
@@ -330,7 +347,7 @@ body {
   margin-bottom: 0.4rem;
 }
 
-/* Card de Emissão de Senhas (Triagem com Nome do Paciente) */
+/* Card de Emissão de Senhas */
 .issue-ticket-card {
   padding: 1.25rem;
   text-align: left;
@@ -449,7 +466,7 @@ body {
   background: var(--primary-light);
   color: var(--primary-color);
   border: 1px solid var(--primary-color);
-  padding: 0.3rem 0.65rem;
+  padding: 0.35rem 0.65rem;
   border-radius: 2rem;
   font-weight: 800;
   font-size: 0.8rem;
@@ -471,7 +488,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   5. PAINEL DE CONTROLES DO OPERADOR & MÉTODOS DO CONSULTÓRIO
+   5. PAINEL DE CONTROLES DO OPERADOR & CONSULTÓRIO
    -------------------------------------------------------------------------- */
 .controls-section, .admin-controls-panel {
   background: var(--surface-color);
@@ -516,6 +533,13 @@ body {
   text-align: center;
 }
 
+.btn-control:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+
 .btn-control:active { transform: scale(0.97); }
 .btn-control:focus-visible { outline: 3px solid var(--accent-color); outline-offset: 2px; }
 
@@ -537,7 +561,7 @@ body {
 .btn-reset { background-color: #dc2626 !important; }
 .btn-reset:hover { background-color: #b91c1c !important; }
 
-/* Novos Botões do Consultório Enterprise */
+/* Botões do Consultório Enterprise */
 .btn-doctor-start { background-color: #0284c7 !important; }
 .btn-doctor-start:hover { background-color: #0369a1 !important; }
 

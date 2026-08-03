@@ -4,7 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel do Médico/Consultório (atendimento.html).
- *            Suporte aos botões de Iniciar, Finalizar Atendimento e Marcar Ausente.
+ *            Desabilita o botão INICIAR após clique e exibe aviso visual em atendimento.
  * ============================================================================
  */
 
@@ -12,7 +12,7 @@ class ChamaSenhaDoctorApp {
   constructor() {
     this.socket = null;
     this.broadcastChannel = null;
-    this.currentTicket = null;
+    this.isServiceActive = false;
 
     let savedRoom = localStorage.getItem('chama_senha_doctor_room');
     if (!savedRoom || savedRoom.includes('Consultório A') || savedRoom.includes('Consultório B') || savedRoom.includes('Consultório C')) {
@@ -147,14 +147,39 @@ class ChamaSenhaDoctorApp {
   renderState(state) {
     if (!state) return;
 
-    // Atualiza número da última senha se a chamada for para esta sala
     if (state.guicheAtual === this.selectedRoom && state.senhaAtualText) {
       if (this.dom.senhaAtualNumero) this.dom.senhaAtualNumero.textContent = state.senhaAtualText;
       if (this.dom.doctorPatientName) {
         this.dom.doctorPatientName.textContent = state.patientNameAtual ? `Paciente: ${state.patientNameAtual}` : '';
       }
-      if (this.dom.displayTypeBadge) {
-        this.dom.displayTypeBadge.textContent = state.tipoAtendimento || 'Em Atendimento';
+      
+      // Se o status do ticket for IN_SERVICE
+      if (state.currentTicket && state.currentTicket.status === 'IN_SERVICE') {
+        this.isServiceActive = true;
+        if (this.dom.btnStart) this.dom.btnStart.disabled = true;
+        if (this.dom.displayTypeBadge) {
+          this.dom.displayTypeBadge.textContent = '🟢 ATENDIMENTO INICIADO (EM CONSULTA)';
+          this.dom.displayTypeBadge.className = 'display-type-badge in-service';
+        }
+      } else if (state.currentTicket && state.currentTicket.status === 'COMPLETED') {
+        this.isServiceActive = false;
+        if (this.dom.btnStart) this.dom.btnStart.disabled = false;
+        if (this.dom.displayTypeBadge) {
+          this.dom.displayTypeBadge.textContent = '✅ Atendimento Concluído';
+          this.dom.displayTypeBadge.className = 'display-type-badge completed';
+        }
+      } else if (state.currentTicket && state.currentTicket.status === 'ABSENT') {
+        this.isServiceActive = false;
+        if (this.dom.btnStart) this.dom.btnStart.disabled = false;
+        if (this.dom.displayTypeBadge) {
+          this.dom.displayTypeBadge.textContent = '⚠️ Paciente Ausente';
+          this.dom.displayTypeBadge.className = 'display-type-badge absent';
+        }
+      } else {
+        if (this.dom.displayTypeBadge && !this.isServiceActive) {
+          this.dom.displayTypeBadge.textContent = state.tipoAtendimento || 'Aguardando Atendimento';
+          this.dom.displayTypeBadge.className = 'display-type-badge';
+        }
       }
     }
 
@@ -197,12 +222,16 @@ class ChamaSenhaDoctorApp {
   }
 
   chamarProximoPaciente() {
+    this.isServiceActive = false;
+    if (this.dom.btnStart) this.dom.btnStart.disabled = false;
     const payloadData = { destination: this.selectedRoom };
     this.sendEvent('CALL_NEXT', payloadData);
     this.animateCard();
   }
 
   chamarSenhaEspecifica(ticketId) {
+    this.isServiceActive = false;
+    if (this.dom.btnStart) this.dom.btnStart.disabled = false;
     const payloadData = { destination: this.selectedRoom, specificTicketId: ticketId };
     this.sendEvent('CALL_NEXT', payloadData);
     this.animateCard();
@@ -216,25 +245,46 @@ class ChamaSenhaDoctorApp {
 
   iniciarAtendimento() {
     const ticketId = this.dom.senhaAtualNumero?.textContent;
-    if (ticketId && ticketId !== 'N000') {
+    if (ticketId && ticketId !== 'N000' && ticketId !== '0000') {
+      this.isServiceActive = true;
+      if (this.dom.btnStart) this.dom.btnStart.disabled = true;
+
+      if (this.dom.displayTypeBadge) {
+        this.dom.displayTypeBadge.textContent = '🟢 ATENDIMENTO INICIADO (EM CONSULTA)';
+        this.dom.displayTypeBadge.className = 'display-type-badge in-service';
+      }
+
       this.sendEvent('START_SERVICE', { ticketId });
-      if (this.dom.displayTypeBadge) this.dom.displayTypeBadge.textContent = 'Em Atendimento...';
     }
   }
 
   finalizarAtendimento() {
     const ticketId = this.dom.senhaAtualNumero?.textContent;
-    if (ticketId && ticketId !== 'N000') {
+    if (ticketId && ticketId !== 'N000' && ticketId !== '0000') {
+      this.isServiceActive = false;
+      if (this.dom.btnStart) this.dom.btnStart.disabled = false;
+
+      if (this.dom.displayTypeBadge) {
+        this.dom.displayTypeBadge.textContent = '✅ Atendimento Concluído';
+        this.dom.displayTypeBadge.className = 'display-type-badge completed';
+      }
+
       this.sendEvent('COMPLETE_SERVICE', { ticketId });
-      if (this.dom.displayTypeBadge) this.dom.displayTypeBadge.textContent = 'Atendimento Concluído';
     }
   }
 
   marcarAusente() {
     const ticketId = this.dom.senhaAtualNumero?.textContent;
-    if (ticketId && ticketId !== 'N000') {
+    if (ticketId && ticketId !== 'N000' && ticketId !== '0000') {
+      this.isServiceActive = false;
+      if (this.dom.btnStart) this.dom.btnStart.disabled = false;
+
+      if (this.dom.displayTypeBadge) {
+        this.dom.displayTypeBadge.textContent = '⚠️ Paciente Ausente';
+        this.dom.displayTypeBadge.className = 'display-type-badge absent';
+      }
+
       this.sendEvent('MARK_ABSENT', { ticketId });
-      if (this.dom.displayTypeBadge) this.dom.displayTypeBadge.textContent = 'Paciente Ausente';
     }
   }
 
