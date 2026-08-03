@@ -84,7 +84,7 @@
           <div id="displayTypeBadge" class="display-type-badge">Aguardando Chamada</div>
         </section>
 
-        <!-- Emissão de Novas Senhas (Triagem da Recepção) -->
+        <!-- Emissão de Novas Senhas (Triagem da Recepção com Consultórios 01 a 05) -->
         <section class="secondary-card issue-ticket-card" aria-label="Emissão e Cadastramento de Senhas">
           <h3 class="card-title">EMISSÃO DE SENHA (TRIAGEM)</h3>
           
@@ -92,11 +92,13 @@
             <div class="issue-destination-row">
               <label for="issueDestinationSelect" class="issue-label">Destino / Sala:</label>
               <select id="issueDestinationSelect" class="issue-select">
-                <option value="Consultório A">Consultório A</option>
-                <option value="Consultório B">Consultório B</option>
-                <option value="Consultório C">Consultório C</option>
                 <option value="Consultório 01">Consultório 01</option>
                 <option value="Consultório 02">Consultório 02</option>
+                <option value="Consultório 03">Consultório 03</option>
+                <option value="Consultório 04">Consultório 04</option>
+                <option value="Consultório 05">Consultório 05</option>
+                <option value="Guichê 01">Guichê 01</option>
+                <option value="Guichê 02">Guichê 02</option>
                 <option value="Recepção">Recepção</option>
                 <option value="Geral" selected>Fila Geral</option>
               </select>
@@ -114,7 +116,7 @@
           </div>
         </section>
 
-        <!-- Resumo da Fila de Espera em Tempo Real -->
+        <!-- Resumo da Fila de Espera em Tempo Real (Prioridades Primeiro) -->
         <section class="secondary-card queue-summary-card" aria-label="Fila de Espera Atual">
           <div class="queue-summary-header">
             <h3 class="card-title">FILA DE ESPERA (<span id="totalQueueCount">0</span>)</h3>

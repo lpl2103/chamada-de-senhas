@@ -4,8 +4,8 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel do Médico/Consultório (atendimento.html).
- *            Sem emissão de áudio local (áudio executado exclusivamente na TV).
- *            Listagem em tempo real de senhas cadastradas para o consultório.
+ *            Consultórios renomeados para números (Consultório 01 a 05).
+ *            Prioridades SEMPRE posicionadas na frente da fila de atendimento.
  * ============================================================================
  */
 
@@ -13,7 +13,13 @@ class ChamaSenhaDoctorApp {
   constructor() {
     this.socket = null;
     this.broadcastChannel = null;
-    this.selectedRoom = localStorage.getItem('chama_senha_doctor_room') || 'Consultório A';
+
+    let savedRoom = localStorage.getItem('chama_senha_doctor_room');
+    if (!savedRoom || savedRoom.includes('Consultório A') || savedRoom.includes('Consultório B') || savedRoom.includes('Consultório C')) {
+      savedRoom = 'Consultório 01';
+      localStorage.setItem('chama_senha_doctor_room', savedRoom);
+    }
+    this.selectedRoom = savedRoom;
 
     // Elementos do DOM
     this.dom = {
@@ -43,7 +49,7 @@ class ChamaSenhaDoctorApp {
       this.dom.doctorRoomSelect.value = this.selectedRoom;
     }
     this.updateRoomLabel();
-    console.log(`[ChamaSenha Consultório]: Inicializado na sala ${this.selectedRoom} (Sem som local).`);
+    console.log(`[ChamaSenha Consultório]: Inicializado no ${this.selectedRoom}. Prioridades no topo da fila.`);
   }
 
   bindEvents() {
@@ -148,6 +154,13 @@ class ChamaSenhaDoctorApp {
       (t) => t.destination === this.selectedRoom || t.destination === 'Geral'
     );
 
+    // ORDENAÇÃO: PRIORIDADES SEMPRE NA FRENTE DAS NORMAIS
+    roomTickets.sort((a, b) => {
+      if (a.type === 'PRIORIDADE' && b.type !== 'PRIORIDADE') return -1;
+      if (a.type !== 'PRIORIDADE' && b.type === 'PRIORIDADE') return 1;
+      return 0;
+    });
+
     if (this.dom.waitingQueueCount) {
       this.dom.waitingQueueCount.textContent = roomTickets.length;
     }
@@ -155,7 +168,7 @@ class ChamaSenhaDoctorApp {
       this.dom.doctorQueueCount.textContent = roomTickets.length;
     }
 
-    // Renderiza a lista de senhas cadastradas para o consultório
+    // Renderiza a lista de senhas cadastradas para o consultório (Prioridades primeiro)
     if (this.dom.doctorQueueContainer) {
       this.dom.doctorQueueContainer.innerHTML = '';
 

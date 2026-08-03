@@ -59,7 +59,7 @@
        ==================================================================== -->
   <main id="main-doctor-content" class="main-container doctor-container" role="main">
     
-    <!-- Configuração da Sala / Consultório Atual -->
+    <!-- Configuração da Sala / Consultório Atual (Números de 1 a 5) -->
     <section class="secondary-card doctor-room-card" aria-label="Identificação do Consultório">
       <div class="doctor-room-group">
         <label for="doctorRoomSelect" class="doctor-room-label">
@@ -67,11 +67,11 @@
           Sua Sala / Consultório:
         </label>
         <select id="doctorRoomSelect" class="doctor-room-select">
-          <option value="Consultório A">Consultório A</option>
-          <option value="Consultório B">Consultório B</option>
-          <option value="Consultório C">Consultório C</option>
           <option value="Consultório 01">Consultório 01</option>
           <option value="Consultório 02">Consultório 02</option>
+          <option value="Consultório 03">Consultório 03</option>
+          <option value="Consultório 04">Consultório 04</option>
+          <option value="Consultório 05">Consultório 05</option>
           <option value="Guichê 01">Guichê 01</option>
           <option value="Guichê 02">Guichê 02</option>
           <option value="Recepção">Recepção</option>
@@ -89,7 +89,7 @@
     <section id="doctorDisplayCard" class="display-card doctor-display-card" aria-live="assertive" aria-atomic="true">
       <div class="card-top-info">
         <span class="display-label">SENHA EM ATENDIMENTO</span>
-        <span id="doctorRoomPill" class="guiche-badge-pill">Consultório A</span>
+        <span id="doctorRoomPill" class="guiche-badge-pill">Consultório 01</span>
       </div>
 
       <div id="doctorSenhaAtualNumero" class="display-number doctor-display-number">0000</div>
@@ -117,10 +117,10 @@
       </div>
     </section>
 
-    <!-- Lista Visual de Pacientes Cadastrados Aguardando para este Consultório -->
+    <!-- Lista Visual de Pacientes Cadastrados Aguardando (Prioridades Sempre em Primeiro) -->
     <section class="secondary-card doctor-queue-list-card" aria-label="Lista de Pacientes Cadastrados">
       <h3 class="card-title">SENHAS CADASTRADAS PARA ESTE CONSULTÓRIO (<span id="doctorQueueCount">0</span>)</h3>
-      <p class="queue-instruction-hint">Clique em uma senha abaixo para chamá-la diretamente:</p>
+      <p class="queue-instruction-hint">Prioridades exibidas em primeiro lugar. Clique para chamar diretamente:</p>
       
       <div id="doctorQueueContainer" class="doctor-queue-container">
         <p class="queue-empty-text">Nenhuma senha cadastrada aguardando para este consultório.</p>

@@ -4,8 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Exibe o histórico em Lista Vertical limitado estritamente a 3 itens
- *            para garantir o encaixe perfeito na viewport sem barra de rolagem.
+ *            Repete o sinal sonoro 3 vezes antes do anúncio de voz.
  * ============================================================================
  */
 
@@ -39,7 +38,7 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Máximo 3 itens no Histórico).');
+    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (3 toques de som).');
   }
 
   bindEvents() {
@@ -151,7 +150,7 @@ class ChamaSenhaTV {
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
       const rawHistorico = state.historico || [];
-      const historico = rawHistorico.slice(0, 3); // Limite rígido de 3 itens para não estourar a tela
+      const historico = rawHistorico.slice(0, 3);
 
       if (historico.length === 0) {
         const itemVazio = document.createElement('li');
@@ -194,8 +193,11 @@ class ChamaSenhaTV {
 
     if (triggerAlerts && state.senhaAtualText !== '0000') {
       this.animateCard();
-      if (this.somHabilitado) this.tocarGingle();
-      if (this.vozHabilitada) setTimeout(() => this.anunciarVoz(state.senhaAtualText, state.guicheAtual), 700);
+      this.tocarGingle3Vezes(() => {
+        if (this.vozHabilitada) {
+          this.anunciarVoz(state.senhaAtualText, state.guicheAtual);
+        }
+      });
     }
   }
 
@@ -207,14 +209,45 @@ class ChamaSenhaTV {
     }
   }
 
-  tocarGingle() {
-    if (this.dom.audioChamada) {
-      this.dom.audioChamada.currentTime = 0;
-      const promise = this.dom.audioChamada.play();
-      if (promise !== undefined) {
-        promise.catch((err) => console.warn('[TV Audio]: Bloqueio de áudio:', err));
-      }
+  /**
+   * Repete o gingle sonoro 3 vezes em sequência antes de chamar o callback de voz
+   */
+  tocarGingle3Vezes(onCompleteCallback) {
+    if (!this.dom.audioChamada || !this.somHabilitado) {
+      if (onCompleteCallback) onCompleteCallback();
+      return;
     }
+
+    let toquesRestantes = 3;
+
+    const tocarUm = () => {
+      if (toquesRestantes <= 0) {
+        if (onCompleteCallback) setTimeout(onCompleteCallback, 300);
+        return;
+      }
+
+      toquesRestantes--;
+      this.dom.audioChamada.currentTime = 0;
+      
+      const playPromise = this.dom.audioChamada.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            this.dom.audioChamada.onended = () => {
+              this.dom.audioChamada.onended = null;
+              setTimeout(tocarUm, 250);
+            };
+          })
+          .catch((err) => {
+            console.warn('[TV Audio]: Bloqueio de autoplay no navegador:', err);
+            if (onCompleteCallback) onCompleteCallback();
+          });
+      } else {
+        setTimeout(tocarUm, 1200);
+      }
+    };
+
+    tocarUm();
   }
 
   anunciarVoz(senhaStr, guicheStr) {

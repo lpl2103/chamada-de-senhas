@@ -3,8 +3,7 @@
  * SISTEMA CHAMA SENHA - SCRIPT DA RECEPÇÃO & TRIAGEM (VANILLA JAVASCRIPT ES6+)
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
- * Descrição: Script principal da Recepção (index.html). Suporte ao histórico
- *            detalhado no formato 'P003 - Consultório A'.
+ * Descrição: Script principal da Recepção (index.html). Prioridades no topo.
  * ============================================================================
  */
 
@@ -48,7 +47,7 @@ class StateManager {
         guicheAtual: this.guicheAtual,
         tipoAtendimento: this.tipoAtendimento,
         queue: this.queue,
-        historico: this.historico.slice(0, 5),
+        historico: (this.historico || []).slice(0, 3),
         somHabilitado: this.somHabilitado,
         vozHabilitada: this.vozHabilitada
       };
@@ -282,7 +281,7 @@ class ChamaSenhaApp {
         };
 
         this.state.historico.unshift(historyEntry);
-        if (this.state.historico.length > 5) this.state.historico.pop();
+        if (this.state.historico.length > 3) this.state.historico.pop();
 
         this.state.saveToStorage();
         this.updateUI();
@@ -377,15 +376,22 @@ class ChamaSenhaApp {
       }
     }
 
-    const queue = this.state.queue || [];
-    if (this.dom.totalQueueCount) this.dom.totalQueueCount.textContent = queue.length;
+    const rawQueue = this.state.queue || [];
+    // ORDENAÇÃO: PRIORIDADES NO TOPO DA FILA
+    const sortedQueue = [...rawQueue].sort((a, b) => {
+      if (a.type === 'PRIORIDADE' && b.type !== 'PRIORIDADE') return -1;
+      if (a.type !== 'PRIORIDADE' && b.type === 'PRIORIDADE') return 1;
+      return 0;
+    });
+
+    if (this.dom.totalQueueCount) this.dom.totalQueueCount.textContent = sortedQueue.length;
 
     if (this.dom.queueListContainer) {
       this.dom.queueListContainer.innerHTML = '';
-      if (queue.length === 0) {
+      if (sortedQueue.length === 0) {
         this.dom.queueListContainer.innerHTML = '<p class="queue-empty-text">Nenhum paciente aguardando na fila.</p>';
       } else {
-        queue.forEach((t) => {
+        sortedQueue.forEach((t) => {
           const pill = document.createElement('button');
           pill.className = `queue-item-pill ${t.type === 'PRIORIDADE' ? 'prioridade' : ''}`;
           pill.title = `Clique para chamar ${t.id} agora`;
@@ -398,14 +404,15 @@ class ChamaSenhaApp {
 
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
-      if (this.state.historico.length === 0) {
+      const historico = (this.state.historico || []).slice(0, 3);
+      if (historico.length === 0) {
         const li = document.createElement('li');
         li.className = 'history-item';
         li.style.opacity = '0.6';
         li.textContent = 'Nenhuma chamada realizada';
         this.dom.historicoLista.appendChild(li);
       } else {
-        this.state.historico.forEach((item) => {
+        historico.forEach((item) => {
           const li = document.createElement('li');
           li.className = 'history-item';
           
