@@ -47,9 +47,14 @@
           <span>Relatórios BI</span>
         </a>
 
-        <a href="tv.html" target="_blank" class="icon-btn link-tv-btn" title="Abrir Tela da TV em nova janela">
+        <a href="tv.html" target="_blank" class="icon-btn link-tv-btn" title="Abrir Tela da TV Básica">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
-          <span>Tela TV</span>
+          <span>TV Básica</span>
+        </a>
+
+        <a href="tvads.html" target="_blank" class="icon-btn link-tvads-btn" title="Abrir Tela da TV com Mídia Indoor / Vídeos">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/></svg>
+          <span>TV com Mídia</span>
         </a>
 
         <button id="soundToggleBtn" class="icon-btn" title="Alternar Som Local" aria-label="Alternar Som">
@@ -90,7 +95,7 @@
           <div id="displayTypeBadge" class="display-type-badge">Aguardando Chamada</div>
         </section>
 
-        <!-- Emissão de Novas Senhas (Com opção de Nome do Paciente) -->
+        <!-- Emissão de Novas Senhas (Com opção de Nome do Paciente & Impressão Térmica) -->
         <section class="secondary-card issue-ticket-card" aria-label="Emissão e Cadastramento de Senhas">
           <h3 class="card-title">EMISSÃO DE SENHA (TRIAGEM)</h3>
           
@@ -121,6 +126,12 @@
 
               <button id="btnIssuePrior" class="btn-issue btn-issue-prior" title="Emitir Nova Senha Prioritária">
                 <span>+ EMITIR PRIORIDADE</span>
+              </button>
+            </div>
+
+            <div class="issue-print-row" style="margin-top: 0.2rem;">
+              <button id="btnIssueAndPrint" class="btn-issue btn-issue-print" style="width: 100%; background: #0284c7;" title="Emitir e Imprimir Ticket Térmico com QR Code">
+                <span>🖨️ EMITIR E IMPRIMIR TICKET COM QR CODE</span>
               </button>
             </div>
           </div>
@@ -225,6 +236,9 @@
       </div>
     </div>
   </div>
+
+  <!-- CONTAINER DE IMPRESSÃO TÉRMICA OCULTO -->
+  <div id="printContainer" class="print-container"></div>
 
   <!-- Rodapé -->
   <footer class="app-footer" role="contentinfo">

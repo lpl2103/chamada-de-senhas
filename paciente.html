@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Acompanhamento da Fila em Tempo Real pelo Celular do Paciente - ChamaSenha Enterprise" />
+  <meta name="theme-color" content="#003a5f" />
+
+  <title>Seu Atendimento - ChamaSenha</title>
+
+  <!-- Fontes de Alta Performance Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Estilos Gerais da Aplicação -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Script da Tela do Paciente -->
+  <script src="js/paciente.js" defer></script>
+</head>
+
+<body class="patient-mobile-body">
+  <div class="patient-container">
+    
+    <!-- Cabeçalho Mobile -->
+    <header class="patient-header">
+      <img src="imagens/nvzenit.webp" alt="Logo Zenit Tecnologia" class="patient-brand-logo" />
+      <h1 class="patient-brand-title">ZENIT TECNOLOGIA</h1>
+      <p class="patient-brand-sub">Acompanhamento do Paciente em Tempo Real</p>
+    </header>
+
+    <!-- Card Principal do Paciente -->
+    <main class="patient-main-card">
+      <span class="patient-label">SUA SENHA</span>
+      <div id="patientTicketNumber" class="patient-ticket-number">N000</div>
+      
+      <div id="patientNameText" class="patient-name-text"></div>
+
+      <!-- Badge de Status Atual -->
+      <div id="patientStatusBadge" class="patient-status-badge">Carregando fila...</div>
+
+      <!-- Indicador de Posição -->
+      <div class="patient-position-box">
+        <span class="position-label">Pessoas na sua frente:</span>
+        <strong id="patientAheadCount" class="position-number">0</strong>
+      </div>
+
+      <div class="patient-destination-box">
+        <span>Local de Atendimento:</span>
+        <strong id="patientDestination" class="destination-text">Consultório 01</strong>
+      </div>
+    </main>
+
+    <!-- Rodapé Mobile -->
+    <footer class="patient-footer">
+      <p>Mantenha esta página aberta para receber alertas de chamada.</p>
+      <div class="status-indicator" style="justify-content: center; margin-top: 0.5rem;">
+        <span id="statusDot" class="status-dot online"></span>
+        <span id="statusText">Conectado ao Sistema</span>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

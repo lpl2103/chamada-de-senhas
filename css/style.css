@@ -2,7 +2,7 @@
    SISTEMA CHAMA SENHA - STYLESHEET COMPLETO ENTERPRISE (CSS3 PURÍSSIMO)
    ==========================================================================
    Suporte a: Multi-Telas, Triagem por Nome, Relatórios BI, Ações do Atendimento,
-   Modais Customizados, Temas Escuro/Claro, Layout 2-Colunas e Responsividade.
+   Impressão Térmica, Mídia Indoor (tvads.html), Acompanhamento do Paciente (paciente.html).
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -49,24 +49,6 @@
   --active-glow: 0 0 40px rgba(2, 132, 199, 0.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-color: #0f172a;
-    --surface-color: #1e293b;
-    --surface-border: #334155;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --primary-color: #0284c7;
-    --primary-hover: #0369a1;
-    --primary-light: #1e3a5f;
-    --accent-color: #f59e0b;
-    --accent-light: #78350f;
-    --history-bg: #334155;
-    --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
-    --active-glow: 0 0 40px rgba(2, 132, 199, 0.6);
-  }
-}
-
 /* --------------------------------------------------------------------------
    2. RESET E BASE
    -------------------------------------------------------------------------- */
@@ -106,21 +88,7 @@ body {
   font-weight: 600;
   transition: top var(--transition-fast);
 }
-.skip-link:focus {
-  top: 1rem;
-  outline: 3px solid var(--accent-color);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
+.skip-link:focus { top: 1rem; outline: 3px solid var(--accent-color); }
 
 /* --------------------------------------------------------------------------
    3. CABEÇALHO (HEADER)
@@ -172,7 +140,7 @@ body {
   gap: 0.5rem;
 }
 
-.icon-btn, .link-tv-btn, .link-doctor-btn, .link-reports-btn {
+.icon-btn, .link-tv-btn, .link-doctor-btn, .link-reports-btn, .link-tvads-btn {
   background: var(--bg-color);
   border: 1px solid var(--surface-border);
   color: var(--text-main);
@@ -189,14 +157,14 @@ body {
   transition: all var(--transition-fast);
 }
 
-.icon-btn:hover, .link-tv-btn:hover, .link-doctor-btn:hover, .link-reports-btn:hover {
+.icon-btn:hover, .link-tv-btn:hover, .link-doctor-btn:hover, .link-reports-btn:hover, .link-tvads-btn:hover {
   background: var(--primary-light);
   color: var(--primary-color);
   border-color: var(--primary-color);
 }
 
 /* --------------------------------------------------------------------------
-   4. LAYOUT ADMINISTRATIVO EM 2 COLUNAS (LADO A LADO - SEM SCROLL)
+   4. LAYOUT ADMINISTRATIVO EM 2 COLUNAS
    -------------------------------------------------------------------------- */
 .admin-container {
   max-width: 1600px;
@@ -216,9 +184,7 @@ body {
 }
 
 @media (max-width: 1024px) {
-  .admin-two-columns {
-    grid-template-columns: 1fr;
-  }
+  .admin-two-columns { grid-template-columns: 1fr; }
 }
 
 .admin-col-left, .admin-col-right {
@@ -227,7 +193,6 @@ body {
   gap: 1.25rem;
 }
 
-/* Display Card Compacto no Operador */
 .display-card {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
   color: var(--text-inverse);
@@ -308,28 +273,11 @@ body {
   transition: all var(--transition-normal);
 }
 
-.display-type-badge.prioridade {
-  background: var(--accent-color);
-  color: #ffffff;
-}
+.display-type-badge.prioridade { background: var(--accent-color); color: #ffffff; }
+.display-type-badge.in-service { background: #0284c7; color: #ffffff; box-shadow: 0 0 15px rgba(2, 132, 199, 0.8); }
+.display-type-badge.completed { background: #059669; color: #ffffff; }
+.display-type-badge.absent { background: #dc2626; color: #ffffff; }
 
-.display-type-badge.in-service {
-  background: #0284c7;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(2, 132, 199, 0.8);
-}
-
-.display-type-badge.completed {
-  background: #059669;
-  color: #ffffff;
-}
-
-.display-type-badge.absent {
-  background: #dc2626;
-  color: #ffffff;
-}
-
-/* Secondary Cards Gerais */
 .secondary-card {
   background: var(--surface-color);
   border: 1px solid var(--surface-border);
@@ -347,28 +295,10 @@ body {
   margin-bottom: 0.4rem;
 }
 
-/* Card de Emissão de Senhas */
-.issue-ticket-card {
-  padding: 1.25rem;
-  text-align: left;
-}
-
-.issue-controls-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.4rem;
-}
-
-.issue-destination-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.issue-name-row {
-  width: 100%;
-}
+.issue-ticket-card { padding: 1.25rem; text-align: left; }
+.issue-controls-group { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.4rem; }
+.issue-destination-row { display: flex; align-items: center; gap: 0.75rem; }
+.issue-name-row { width: 100%; }
 
 .issue-name-input {
   width: 100%;
@@ -380,19 +310,9 @@ body {
   font-weight: 600;
   font-size: 0.9rem;
   outline: none;
-  transition: border-color var(--transition-fast);
 }
 
-.issue-name-input:focus {
-  border-color: var(--primary-color);
-}
-
-.issue-label {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--text-main);
-  white-space: nowrap;
-}
+.issue-label { font-weight: 700; font-size: 0.85rem; color: var(--text-main); white-space: nowrap; }
 
 .issue-select {
   flex: 1;
@@ -406,11 +326,7 @@ body {
   outline: none;
 }
 
-.issue-buttons-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
+.issue-buttons-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
 .btn-issue {
   padding: 0.75rem 0.85rem;
@@ -421,31 +337,18 @@ body {
   cursor: pointer;
   color: #ffffff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
+  transition: transform var(--transition-fast);
 }
 
 .btn-issue:active { transform: scale(0.97); }
 .btn-issue-normal { background: #2563eb; }
 .btn-issue-normal:hover { background: #1d4ed8; }
-
 .btn-issue-prior { background: #d97706; }
 .btn-issue-prior:hover { background: #b45309; }
 
-/* Fila de Espera na Recepção */
-.queue-summary-card {
-  padding: 1.25rem;
-}
-
-.queue-summary-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.queue-sub-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
+.queue-summary-card { padding: 1.25rem; }
+.queue-summary-header { display: flex; justify-content: space-between; align-items: center; }
+.queue-sub-text { font-size: 0.85rem; color: var(--text-muted); }
 
 .queue-list-container {
   margin-top: 0.6rem;
@@ -456,11 +359,7 @@ body {
   overflow-y: auto;
 }
 
-.queue-empty-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-style: italic;
-}
+.queue-empty-text { font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
 
 .queue-item-pill {
   background: var(--primary-light);
@@ -474,11 +373,6 @@ body {
   align-items: center;
   gap: 0.3rem;
   cursor: pointer;
-  transition: transform var(--transition-fast);
-}
-
-.queue-item-pill:hover {
-  transform: translateY(-1px);
 }
 
 .queue-item-pill.prioridade {
@@ -487,9 +381,6 @@ body {
   border-color: var(--accent-color);
 }
 
-/* --------------------------------------------------------------------------
-   5. PAINEL DE CONTROLES DO OPERADOR & CONSULTÓRIO
-   -------------------------------------------------------------------------- */
 .controls-section, .admin-controls-panel {
   background: var(--surface-color);
   border: 1px solid var(--surface-border);
@@ -540,36 +431,17 @@ body {
   box-shadow: none !important;
 }
 
-.btn-control:active { transform: scale(0.97); }
-.btn-control:focus-visible { outline: 3px solid var(--accent-color); outline-offset: 2px; }
-
 .btn-normal-next { background-color: #2563eb !important; }
-.btn-normal-next:hover { background-color: #1d4ed8 !important; }
-
 .btn-prior-next { background-color: #d97706 !important; }
-.btn-prior-next:hover { background-color: #b45309 !important; }
-
 .btn-repeat { background-color: #059669 !important; }
-.btn-repeat:hover { background-color: #047857 !important; }
-
 .btn-normal-prev { background-color: #64748b !important; }
-.btn-normal-prev:hover { background-color: #475569 !important; }
-
 .btn-prior-prev { background-color: #78350f !important; }
-.btn-prior-prev:hover { background-color: #451a03 !important; }
-
 .btn-reset { background-color: #dc2626 !important; }
-.btn-reset:hover { background-color: #b91c1c !important; }
 
-/* Botões do Consultório Enterprise */
 .btn-doctor-start { background-color: #0284c7 !important; }
-.btn-doctor-start:hover { background-color: #0369a1 !important; }
-
 .btn-doctor-complete { background-color: #059669 !important; }
-.btn-doctor-complete:hover { background-color: #047857 !important; }
-
 .btn-doctor-absent { background-color: #dc2626 !important; }
-.btn-doctor-absent:hover { background-color: #b91c1c !important; }
+.btn-doctor-redirect { background-color: #7c3aed !important; }
 
 .btn-shortcut-hint {
   font-size: 0.7rem;
@@ -597,11 +469,10 @@ body {
   border-radius: 0.5rem;
   font-weight: 700;
   font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
 }
 
 /* --------------------------------------------------------------------------
-   6. PAINEL DO CONSULTÓRIO DO MÉDICO (atendimento.html - VIEWPORT 100VH FIT)
+   5. CONSULTÓRIO DO MÉDICO
    -------------------------------------------------------------------------- */
 html.doctor-mode, body.doctor-mode {
   height: 100vh;
@@ -624,227 +495,183 @@ html.doctor-mode, body.doctor-mode {
   min-height: 0;
 }
 
-.doctor-room-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.85rem 1.5rem;
-  flex-shrink: 0;
+.doctor-room-card { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.5rem; flex-shrink: 0; }
+.doctor-room-group { display: flex; align-items: center; gap: 0.85rem; }
+.doctor-room-label { font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.doctor-room-select { padding: 0.45rem 1rem; border-radius: 0.5rem; border: 2px solid var(--primary-color); background: var(--surface-color); color: var(--text-main); font-weight: 800; font-size: 1rem; outline: none; }
+
+.room-stats-badge { background: var(--primary-light); color: var(--primary-color); padding: 0.4rem 1rem; border-radius: 2rem; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; }
+.queue-count-number { font-size: 1.1rem; color: var(--accent-color); }
+
+.doctor-display-card { padding: 1.25rem 1.5rem; flex: 0 0 auto; }
+.doctor-display-number { font-size: clamp(3.2rem, 8vw, 5.5rem); line-height: 1; }
+
+.doctor-controls-section { padding: 1rem; flex-shrink: 0; }
+.doctor-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; }
+
+.doctor-queue-list-card { padding: 1rem 1.25rem; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.doctor-queue-container { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 1; min-height: 0; overflow-y: auto; }
+
+/* --------------------------------------------------------------------------
+   6. TV MÍDIA INDOOR (tvads.html)
+   -------------------------------------------------------------------------- */
+.tvads-body {
+  background-color: #0b132b;
 }
 
-.doctor-room-group {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.doctor-room-label {
-  font-weight: 800;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.doctor-room-select {
-  padding: 0.45rem 1rem;
-  border-radius: 0.5rem;
-  border: 2px solid var(--primary-color);
-  background: var(--surface-color);
-  color: var(--text-main);
-  font-weight: 800;
-  font-size: 1rem;
-  outline: none;
-}
-
-.room-stats-badge {
-  background: var(--primary-light);
-  color: var(--primary-color);
-  padding: 0.4rem 1rem;
-  border-radius: 2rem;
-  font-weight: 700;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.queue-count-number {
-  font-size: 1.1rem;
-  color: var(--accent-color);
-}
-
-.doctor-display-card {
-  padding: 1.25rem 1.5rem;
-  flex: 0 0 auto;
-}
-
-.doctor-display-number {
-  font-size: clamp(3.2rem, 8vw, 5.5rem);
-  line-height: 1;
-}
-
-.doctor-controls-section {
-  padding: 1rem;
-  flex-shrink: 0;
-}
-
-.doctor-action-grid {
+.tvads-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.75rem;
-}
-
-.btn-doctor-call {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  font-size: 0.95rem;
-}
-
-.btn-doctor-repeat {
-  background: #2563eb;
-  font-size: 0.95rem;
-}
-
-.doctor-queue-list-card {
-  padding: 1rem 1.25rem;
+  grid-template-columns: 55% 45%;
+  gap: 1.5rem;
+  padding: 0.75rem 2rem;
   flex: 1;
   min-height: 0;
+}
+
+.tvads-left-zone {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+  justify-content: space-between;
 }
 
-.queue-instruction-hint {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-  margin-bottom: 0.5rem;
-}
-
-.doctor-queue-container {
+.tvads-right-zone {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  height: 100%;
+}
+
+.media-indoor-card {
+  background: #1c2541;
+  border-radius: 1.25rem;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.media-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #6fffe9;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.media-player-wrapper {
   flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+  width: 100%;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tvads-ticker-bar {
+  background: var(--primary-color);
+  color: #ffffff;
+  padding: 0.5rem 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.ticker-text-wrapper {
+  display: inline-block;
+  padding-left: 100%;
+  animation: tickerMarquee 25s linear infinite;
+}
+
+@keyframes tickerMarquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
 }
 
 /* --------------------------------------------------------------------------
-   7. DASHBOARD E RELATÓRIOS BI (relatorios.html)
+   7. PÁGINA DO PACIENTE (paciente.html - MOBILE FIT)
    -------------------------------------------------------------------------- */
-.reports-container {
-  max-width: 1400px;
+.patient-mobile-body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.patient-container {
+  max-width: 420px;
   width: 100%;
-  margin: 0 auto;
-  padding: 1.5rem;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  text-align: center;
 }
 
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
-}
+.patient-header { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+.patient-brand-logo { height: 48px; width: auto; object-fit: contain; }
+.patient-brand-title { font-size: 1.4rem; font-weight: 900; color: #38bdf8; }
+.patient-brand-sub { font-size: 0.85rem; color: #94a3b8; }
 
-.metric-card {
-  background: var(--surface-color);
-  border: 1px solid var(--surface-border);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+.patient-main-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-}
-
-.metric-title {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.metric-value {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: var(--primary-color);
-  line-height: 1.1;
-}
-
-.metric-sub {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.reports-table-card {
-  padding: 1.5rem;
-}
-
-.reports-table-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
   gap: 1rem;
 }
 
-.btn-export-csv {
-  background-color: #059669 !important;
-  flex-direction: row;
-  padding: 0.6rem 1.25rem;
-}
-.btn-export-csv:hover { background-color: #047857 !important; }
+.patient-label { font-size: 1rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.1em; }
+.patient-ticket-number { font-size: 5rem; font-weight: 900; color: #ffffff; line-height: 1; letter-spacing: 0.05em; }
+.patient-name-text { font-size: 1.25rem; font-weight: 800; color: #f59e0b; }
 
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.reports-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.9rem;
-}
-
-.reports-table th {
-  background: var(--primary-light);
-  color: var(--primary-color);
+.patient-status-badge {
+  padding: 0.6rem 1.5rem;
+  border-radius: 2rem;
   font-weight: 800;
-  padding: 0.75rem 1rem;
-  border-bottom: 2px solid var(--surface-border);
+  font-size: 1rem;
+  background: #334155;
+  color: #ffffff;
 }
 
-.reports-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--surface-border);
+.patient-status-badge.next { background: #d97706; color: #ffffff; }
+.patient-status-badge.called { background: #059669; color: #ffffff; animation: pulseGlow 1s infinite; }
+.patient-status-badge.completed { background: #64748b; color: #ffffff; }
+
+.patient-position-box, .patient-destination-box {
+  background: #0f172a;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.table-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-style: italic;
-  padding: 2rem;
-}
+.position-number { font-size: 1.75rem; font-weight: 900; color: #f59e0b; }
+.destination-text { font-size: 1.1rem; font-weight: 800; color: #38bdf8; }
 
-.badge-status {
-  padding: 0.25rem 0.65rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.badge-status.success { background: #dcfce7; color: #15803d; }
-.badge-status.danger { background: #fee2e2; color: #b91c1c; }
-.badge-status.info { background: #e0f2fe; color: #0369a1; }
+.patient-footer { font-size: 0.8rem; color: #64748b; }
 
 /* --------------------------------------------------------------------------
-   8. MODAL CUSTOMIZADO & ESTILOS DA TV
+   8. MODAL CUSTOMIZADO
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
@@ -901,7 +728,7 @@ html.doctor-mode, body.doctor-mode {
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   9. ESTILOS DA TELA DE TV (tv.html)
+   9. ESTILOS DA TELA DE TV BÁSICA (tv.html)
    -------------------------------------------------------------------------- */
 html.tv-mode, body.tv-mode {
   height: 100vh;
@@ -925,16 +752,8 @@ html.tv-mode, body.tv-mode {
   width: 100%;
 }
 
-.tv-header-left {
-  display: flex;
-  align-items: center;
-}
-
-.tv-brand-logo {
-  height: clamp(38px, 4.5vw, 58px);
-  width: auto;
-  object-fit: contain;
-}
+.tv-header-left { display: flex; align-items: center; }
+.tv-brand-logo { height: clamp(38px, 4.5vw, 58px); width: auto; object-fit: contain; }
 
 .clock-display {
   display: flex;
@@ -983,16 +802,8 @@ html.tv-mode, body.tv-mode {
 .tv-display-number { font-size: clamp(5.5rem, 18vw, 14rem); line-height: 0.9; }
 .tv-type-badge { font-size: clamp(1.1rem, 2vw, 1.75rem); padding: 0.4rem 2rem; margin-top: 0.5rem; }
 
-.tv-history-card {
-  padding: 0.85rem 1.5rem;
-  flex-shrink: 0;
-}
-
-.tv-history-title {
-  font-size: 0.9rem;
-  margin-bottom: 0.4rem;
-  text-align: center;
-}
+.tv-history-card { padding: 0.85rem 1.5rem; flex-shrink: 0; }
+.tv-history-title { font-size: 0.9rem; margin-bottom: 0.4rem; text-align: center; }
 
 .tv-history-list {
   display: flex;

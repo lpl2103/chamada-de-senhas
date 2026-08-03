@@ -4,7 +4,8 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel do Médico/Consultório (atendimento.html).
- *            Desabilita o botão INICIAR após clique e exibe aviso visual em atendimento.
+ *            Desabilita o botão INICIAR após clique, exibe aviso visual em atendimento
+ *            e gerencia o Reencaminhamento de Pacientes para outras salas.
  * ============================================================================
  */
 
@@ -21,7 +22,6 @@ class ChamaSenhaDoctorApp {
     }
     this.selectedRoom = savedRoom;
 
-    // Elementos do DOM
     this.dom = {
       doctorRoomSelect: document.getElementById('doctorRoomSelect'),
       doctorRoomPill: document.getElementById('doctorRoomPill'),
@@ -37,6 +37,11 @@ class ChamaSenhaDoctorApp {
       btnStart: document.getElementById('btnDoctorStart'),
       btnComplete: document.getElementById('btnDoctorComplete'),
       btnAbsent: document.getElementById('btnDoctorAbsent'),
+      btnRedirect: document.getElementById('btnDoctorRedirect'),
+      redirectModal: document.getElementById('redirectModal'),
+      redirectDestinationSelect: document.getElementById('redirectDestinationSelect'),
+      btnCancelRedirect: document.getElementById('btnCancelRedirect'),
+      btnConfirmRedirect: document.getElementById('btnConfirmRedirect'),
       statusDot: document.getElementById('statusDot'),
       statusText: document.getElementById('statusText'),
       themeToggleBtn: document.getElementById('themeToggleBtn')
@@ -71,6 +76,9 @@ class ChamaSenhaDoctorApp {
     this.dom.btnStart?.addEventListener('click', () => this.iniciarAtendimento());
     this.dom.btnComplete?.addEventListener('click', () => this.finalizarAtendimento());
     this.dom.btnAbsent?.addEventListener('click', () => this.marcarAusente());
+    this.dom.btnRedirect?.addEventListener('click', () => this.abrirModalRedirect());
+    this.dom.btnCancelRedirect?.addEventListener('click', () => this.fecharModalRedirect());
+    this.dom.btnConfirmRedirect?.addEventListener('click', () => this.executarReencaminhamento());
     this.dom.themeToggleBtn?.addEventListener('click', () => this.toggleTheme());
   }
 
@@ -153,7 +161,6 @@ class ChamaSenhaDoctorApp {
         this.dom.doctorPatientName.textContent = state.patientNameAtual ? `Paciente: ${state.patientNameAtual}` : '';
       }
       
-      // Se o status do ticket for IN_SERVICE
       if (state.currentTicket && state.currentTicket.status === 'IN_SERVICE') {
         this.isServiceActive = true;
         if (this.dom.btnStart) this.dom.btnStart.disabled = true;
@@ -285,6 +292,32 @@ class ChamaSenhaDoctorApp {
       }
 
       this.sendEvent('MARK_ABSENT', { ticketId });
+    }
+  }
+
+  abrirModalRedirect() {
+    this.dom.redirectModal?.classList.add('active');
+  }
+
+  fecharModalRedirect() {
+    this.dom.redirectModal?.classList.remove('active');
+  }
+
+  executarReencaminhamento() {
+    const ticketId = this.dom.senhaAtualNumero?.textContent;
+    const newDestination = this.dom.redirectDestinationSelect?.value || 'Geral';
+
+    if (ticketId && ticketId !== 'N000' && ticketId !== '0000') {
+      this.fecharModalRedirect();
+      this.isServiceActive = false;
+      if (this.dom.btnStart) this.dom.btnStart.disabled = false;
+
+      if (this.dom.displayTypeBadge) {
+        this.dom.displayTypeBadge.textContent = `🔄 Reencaminhado para ${newDestination}`;
+        this.dom.displayTypeBadge.className = 'display-type-badge';
+      }
+
+      this.sendEvent('REDIRECT_TICKET', { ticketId, newDestination });
     }
   }
 

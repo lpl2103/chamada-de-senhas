@@ -3,7 +3,8 @@
  * SISTEMA CHAMA SENHA - SCRIPT DA RECEPÇÃO & TRIAGEM (VANILLA JAVASCRIPT ES6+)
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
- * Descrição: Script principal da Recepção (index.html). Suporte ao Nome do Paciente.
+ * Descrição: Script principal da Recepção (index.html). Suporte ao Nome do Paciente,
+ *            Emissão com Impressão Térmica e QR Code para celular.
  * ============================================================================
  */
 
@@ -106,6 +107,8 @@ class ChamaSenhaApp {
       issuePatientName: document.getElementById('issuePatientName'),
       btnIssueNormal: document.getElementById('btnIssueNormal'),
       btnIssuePrior: document.getElementById('btnIssuePrior'),
+      btnIssueAndPrint: document.getElementById('btnIssueAndPrint'),
+      printContainer: document.getElementById('printContainer'),
       audioChamada: document.getElementById('audioChamada'),
       statusDot: document.getElementById('statusDot'),
       statusText: document.getElementById('statusText'),
@@ -139,6 +142,7 @@ class ChamaSenhaApp {
 
     this.dom.btnIssueNormal?.addEventListener('click', () => this.emitirSenha('NORMAL'));
     this.dom.btnIssuePrior?.addEventListener('click', () => this.emitirSenha('PRIORIDADE'));
+    this.dom.btnIssueAndPrint?.addEventListener('click', () => this.emitirEImprimirSenha());
 
     this.dom.btnProximaNormal?.addEventListener('click', () => this.chamarProxima('NORMAL'));
     this.dom.btnProximaPrior?.addEventListener('click', () => this.chamarProxima('PRIORIDADE'));
@@ -276,6 +280,81 @@ class ChamaSenhaApp {
       this.state.saveToStorage();
       this.updateUI();
     }
+  }
+
+  emitirEImprimirSenha() {
+    const destination = this.dom.issueDestinationSelect?.value || 'Geral';
+    const patientName = (this.dom.issuePatientName?.value || '').trim();
+
+    let newId = '';
+    this.state.senhaNormalCount += 1;
+    newId = 'N' + padNumber(this.state.senhaNormalCount, 3);
+
+    const ticketObj = {
+      id: newId,
+      type: 'NORMAL',
+      destination,
+      patientName,
+      createdAt: new Date().toLocaleTimeString('pt-BR')
+    };
+
+    this.emitirSenha('NORMAL');
+    this.imprimirTicketTermico(ticketObj);
+  }
+
+  imprimirTicketTermico(ticketObj) {
+    const host = window.location.host || 'localhost:3000';
+    const pacienteUrl = `${window.location.protocol}//${host}/paciente.html?ticket=${ticketObj.id}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(pacienteUrl)}`;
+
+    const printWin = window.open('', '_blank', 'width=350,height=500');
+    if (!printWin) return;
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Ticket - ${ticketObj.id}</title>
+        <style>
+          @page { size: 80mm auto; margin: 0; }
+          body {
+            font-family: monospace, sans-serif;
+            width: 76mm;
+            margin: 0 auto;
+            padding: 5mm;
+            text-align: center;
+            color: #000;
+          }
+          .logo { max-width: 120px; margin-bottom: 4px; }
+          .title { font-size: 14px; font-weight: bold; }
+          .sub { font-size: 11px; margin-bottom: 8px; }
+          .ticket-number { font-size: 38px; font-weight: bold; border: 2px dashed #000; padding: 6px; margin: 8px 0; }
+          .info { font-size: 12px; margin: 4px 0; text-align: left; }
+          .qrcode { margin-top: 10px; width: 110px; height: 110px; }
+          .footer-note { font-size: 10px; margin-top: 6px; }
+        </style>
+      </head>
+      <body>
+        <img src="imagens/nvzenit.webp" class="logo" />
+        <div class="title">ZENIT TECNOLOGIA</div>
+        <div class="sub">Sistema de Atendimento</div>
+        <hr/>
+        <div class="info"><strong>DESTINO:</strong> ${ticketObj.destination}</div>
+        ${ticketObj.patientName ? `<div class="info"><strong>PACIENTE:</strong> ${ticketObj.patientName}</div>` : ''}
+        <div class="info"><strong>EMISSÃO:</strong> ${ticketObj.createdAt || new Date().toLocaleTimeString('pt-BR')}</div>
+        <div class="ticket-number">${ticketObj.id}</div>
+        <img src="${qrCodeUrl}" class="qrcode" />
+        <div class="footer-note">Escaneie o QR Code para acompanhar no seu celular</div>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
   }
 
   chamarProxima(preferredType = '') {

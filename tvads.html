@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tv-mode">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Painel TV com Mídia Indoor e Vídeos - ChamaSenha Enterprise - Zenit Tecnologia" />
+  <meta name="theme-color" content="#003a5f" />
+
+  <title>Painel TV Mídia Indoor - ChamaSenha</title>
+
+  <!-- Fontes de Alta Performance Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Estilos Gerais da Aplicação -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Script Específico da TV com Mídia Indoor -->
+  <script src="js/tvads.js" defer></script>
+</head>
+
+<body class="tv-mode tvads-body">
+  <a href="#main-tvads-content" class="skip-link">Pular para o conteúdo principal</a>
+
+  <!-- ====================================================================
+       CABEÇALHO DA TV (LOGO SUPERIOR ESQUERDO & RELÓGIO SUPERIOR DIREITO)
+       ==================================================================== -->
+  <header class="app-header tv-header-minimal" role="banner">
+    <div class="tv-header-content">
+      <div class="tv-header-left">
+        <img src="imagens/nvzenit.webp" alt="Logo Zenit Tecnologia" class="tv-brand-logo" />
+      </div>
+      
+      <div class="clock-display">
+        <span id="digitalClock" class="clock-time">00:00:00</span>
+        <span id="digitalDate" class="clock-date">seg., 01/01/2026</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       CONTEÚDO PRINCIPAL DIVIDIDO EM 2 ZONAS (SENHAS + MÍDIA INDOOR VÍDEO)
+       ==================================================================== -->
+  <main id="main-tvads-content" class="main-container tvads-container" role="main">
+    
+    <!-- LADO ESQUERDO (55%): PAINEL DE SENHAS E HISTÓRICO -->
+    <div class="tvads-left-zone">
+      <!-- Card Principal de Chamada -->
+      <section id="tvDisplayCard" class="display-card tv-display-card" aria-live="assertive" aria-atomic="true">
+        <div class="tv-card-header">
+          <span class="display-label">SENHA</span>
+          <span id="tvGuicheBadge" class="guiche-badge-pill tv-guiche-badge">GUICHÊ 01</span>
+        </div>
+
+        <div id="tvSenhaAtualNumero" class="display-number tv-display-number">N000</div>
+        <div id="tvPatientName" class="display-patient-name" style="font-size: 1.8rem;"></div>
+        <div id="tvDisplayTypeBadge" class="display-type-badge tv-type-badge">Aguardando Chamada</div>
+      </section>
+
+      <!-- Histórico Recente (3 ÚLTIMAS SENHAS) -->
+      <section class="secondary-card tv-history-card" aria-label="Histórico de Chamadas Recentes">
+        <h2 class="card-title tv-history-title">ÚLTIMAS SENHAS CHAMADAS</h2>
+        <ul id="tvHistoricoLista" class="history-list tv-history-list">
+          <li class="history-item" style="opacity: 0.6;">Aguardando início do atendimento...</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- LADO DIREITO (45%): REPRODUTOR DE MÍDIA INDOOR / VÍDEOS INSTITUCIONAIS -->
+    <div class="tvads-right-zone">
+      <div class="media-indoor-card">
+        <h3 class="media-title">ZENIT TECNOLOGIA - MÍDIA INDOOR</h3>
+        <div class="media-player-wrapper">
+          <!-- Player de Vídeo HTML5 em Loop com Fallback -->
+          <video id="mediaIndoorPlayer" class="media-video-element" autoplay loop muted playsinline>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+            Seu navegador não suporta reprodução de vídeo.
+          </video>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BARRA INFERIOR DE NOTÍCIAS / TICKER AVISOS CORRENTES -->
+  <div class="tvads-ticker-bar">
+    <div class="ticker-text-wrapper">
+      <span class="ticker-item">💡 Bem-vindo à Zenit Tecnologia • Mantenha seus documentos em mãos • Atendimento prioritário conforme Lei 10.048/2000 • Dúvidas? Fale com a Recepção.</span>
+    </div>
+  </div>
+
+  <!-- Áudio Sonoro para Anúncio -->
+  <audio id="audioChamada" preload="auto">
+    <source src="audio/chamada.wav" type="audio/wav" />
+  </audio>
+
+  <!-- Rodapé Minimalista -->
+  <footer class="app-footer tv-footer" role="contentinfo">
+    <div class="footer-content">
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Painel TV Mídia Indoor Enterprise</p>
+      
+      <div class="status-indicator">
+        <span id="statusDot" class="status-dot online"></span>
+        <span id="statusText">Conectado ao Servidor</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
