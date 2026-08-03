@@ -1,0 +1,14 @@
+# Dependências
+node_modules/
+package-lock.json
+
+# Ambiente e IDEs
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+.DS_Store
+
+# Logs e Dados Locais
+*.log
+data/

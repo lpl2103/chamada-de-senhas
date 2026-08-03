@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Painel de Exibição Pública de Senhas para TV e Monitor - Zenit Tecnologia" />
+  <meta name="theme-color" content="#003a5f" />
+
+  <title>Painel TV - ChamaSenha</title>
+
+  <!-- Fontes de Alta Performance Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Estilos Gerais da Aplicação -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Script Específico da Tela de TV -->
+  <script src="js/tv.js" defer></script>
+</head>
+
+<body class="tv-mode">
+  <!-- Link de Acessibilidade -->
+  <a href="#main-tv-content" class="skip-link">Pular para o conteúdo principal</a>
+
+  <!-- ====================================================================
+       CABEÇALHO DA TV (HEADER)
+       ==================================================================== -->
+  <header class="app-header tv-header" role="banner">
+    <div class="header-container">
+      <div class="brand-section">
+        <img src="imagens/senha.jpg" alt="Logo Zenit Tecnologia" class="brand-logo" />
+        <div>
+          <h1 class="brand-title">ZENIT TECNOLOGIA</h1>
+          <p class="brand-subtitle">Painel de Atendimento ao Público</p>
+        </div>
+      </div>
+
+      <!-- Relógio Digital, Data e Controles Globais -->
+      <div class="tv-header-info">
+        <div class="clock-display">
+          <span id="digitalClock" class="clock-time">00:00:00</span>
+          <span id="digitalDate" class="clock-date">--/--/----</span>
+        </div>
+
+        <nav class="header-actions" aria-label="Controles da Tela">
+          <button id="fullscreenBtn" class="icon-btn" title="Alternar Tela Cheia" aria-label="Alternar Tela Cheia">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </button>
+
+          <button id="soundToggleBtn" class="icon-btn" title="Alternar Som de Alerta" aria-label="Alternar Som">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+
+          <button id="speechToggleBtn" class="icon-btn" title="Alternar Anúncio por Voz" aria-label="Alternar Voz">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+          </button>
+
+          <button id="themeToggleBtn" class="icon-btn" title="Alternar Tema Claro / Escuro" aria-label="Alternar Tema">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/></svg>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       DISPLAY PRINCIPAL DA TV (GIGANTE)
+       ==================================================================== -->
+  <main id="main-tv-content" class="main-container tv-container" role="main">
+    
+    <!-- Painel Gigante da Senha Chamada -->
+    <section id="tvDisplayCard" class="display-card tv-display-card" aria-live="assertive" aria-atomic="true">
+      <div class="tv-card-header">
+        <span class="display-label">SENHA</span>
+        <span id="tvGuicheBadge" class="tv-guiche-badge">GUICHÊ 01</span>
+      </div>
+
+      <div id="tvSenhaAtualNumero" class="display-number tv-display-number">0000</div>
+
+      <div id="tvDisplayTypeBadge" class="display-type-badge tv-type-badge">Aguardando Chamada</div>
+    </section>
+
+    <!-- Barra Inferior de Últimas Chamadas -->
+    <section class="secondary-card tv-history-card" aria-label="Histórico de Chamadas Recentes">
+      <h2 class="card-title">ÚLTIMAS SENHAS CHAMADAS</h2>
+      <ul id="tvHistoricoLista" class="history-list tv-history-list">
+        <li class="history-item" style="opacity: 0.6;">Aguardando início do atendimento...</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <!-- Elemento de Áudio para Sinal Sonoro -->
+  <audio id="audioChamada" preload="auto">
+    <source src="audio/chamada.wav" type="audio/wav" />
+  </audio>
+
+  <!-- Rodapé com Indicador de Conexão Real-Time -->
+  <footer class="app-footer tv-footer" role="contentinfo">
+    <div class="footer-content">
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Painel de Chamada em Tempo Real</p>
+      
+      <div class="status-indicator">
+        <span id="statusDot" class="status-dot online"></span>
+        <span id="statusText">Conectado ao Servidor</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

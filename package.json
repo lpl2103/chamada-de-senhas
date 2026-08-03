@@ -1,0 +1,21 @@
+{
+  "name": "chama-senha",
+  "version": "2.0.0",
+  "description": "Sistema Moderno de Chamada de Senhas Multi-Telas com WebSockets e Síntese de Voz",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "chama-senha",
+    "atendimento",
+    "websocket",
+    "realtime",
+    "pwa",
+    "vanillajs"
+  ],
+  "author": "Zenit Tecnologia",
+  "license": "MIT"
+}

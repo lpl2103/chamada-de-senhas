@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Painel de Controle do Operador - Sistema ChamaSenha - Zenit Tecnologia" />
+  <meta name="theme-color" content="#003a5f" />
+
+  <title>Painel do Operador - ChamaSenha</title>
+
+  <!-- Fontes de Alta Performance Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Estilos Gerais da Aplicação -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Script Principal da Aplicação -->
+  <script src="js/app.js" defer></script>
+</head>
+
+<body>
+  <!-- Link de Acessibilidade -->
+  <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+
+  <!-- ====================================================================
+       CABEÇALHO DA APLICAÇÃO (HEADER)
+       ==================================================================== -->
+  <header class="app-header" role="banner">
+    <div class="header-container">
+      <div class="brand-section">
+        <img src="imagens/senha.jpg" alt="Logo Zenit Tecnologia" class="brand-logo" />
+        <div>
+          <h1 class="brand-title">ZENIT TECNOLOGIA</h1>
+          <p class="brand-subtitle">Painel de Gerenciamento do Operador</p>
+        </div>
+      </div>
+
+      <!-- Ações do Cabeçalho e Preferências -->
+      <nav class="header-actions" aria-label="Preferências e Navegação">
+        <!-- Botão para Abrir a Tela da TV em Nova Aba -->
+        <a href="tv.html" target="_blank" class="icon-btn link-tv-btn" title="Abrir Tela de Exibição da TV em nova janela">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+          <span>Abrir Tela TV</span>
+        </a>
+
+        <button id="soundToggleBtn" class="icon-btn" title="Alternar Sinal Sonoro Local" aria-label="Alternar Som">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <span class="sr-only">Som</span>
+        </button>
+
+        <button id="speechToggleBtn" class="icon-btn" title="Alternar Voz Local" aria-label="Alternar Voz">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+          <span class="sr-only">Voz</span>
+        </button>
+
+        <button id="themeToggleBtn" class="icon-btn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">
+          <svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/></svg>
+          <span class="sr-only">Tema</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       CONTEÚDO PRINCIPAL (PAINEL DO OPERADOR)
+       ==================================================================== -->
+  <main id="main-content" class="main-container" role="main">
+    
+    <!-- Configuração do Posto de Atendimento (Guichê / Consultório) -->
+    <section class="secondary-card guiche-selector-card" aria-label="Seleção do Posto de Atendimento">
+      <div class="guiche-input-group">
+        <label for="guicheSelect" class="guiche-label">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+          Posto de Atendimento Atual:
+        </label>
+        <select id="guicheSelect" class="guiche-select">
+          <option value="Guichê 01">Guichê 01</option>
+          <option value="Guichê 02">Guichê 02</option>
+          <option value="Guichê 03">Guichê 03</option>
+          <option value="Guichê 04">Guichê 04</option>
+          <option value="Guichê 05">Guichê 05</option>
+          <option value="Consultório A">Consultório A</option>
+          <option value="Consultório B">Consultório B</option>
+          <option value="Consultório C">Consultório C</option>
+          <option value="Recepção Central">Recepção Central</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Card de Visualização da Senha Atual -->
+    <section class="display-card" id="displayCard" aria-live="assertive" aria-atomic="true">
+      <div class="card-top-info">
+        <span class="display-label">SENHA ATUAL</span>
+        <span id="currentGuicheBadge" class="guiche-badge-pill">Guichê 01</span>
+      </div>
+      
+      <div id="senhaAtualNumero" class="display-number">0000</div>
+      <div id="displayTypeBadge" class="display-type-badge">Aguardando Chamada</div>
+    </section>
+
+    <!-- Grid de Informações de Suporte -->
+    <div class="secondary-grid">
+      <section class="secondary-card" aria-label="Última Chamada Realizada">
+        <h3 class="card-title">ÚLTIMA CHAMADA</h3>
+        <p class="card-number" id="ultimaSenhaNumero">0000</p>
+      </section>
+
+      <section class="secondary-card" aria-label="Histórico Recente de Chamadas">
+        <h3 class="card-title">HISTÓRICO RECENTE</h3>
+        <ul class="history-list" id="historicoLista">
+          <li class="history-item" style="opacity: 0.6;">Nenhuma chamada realizada</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- PAINEL DE COMANDOS DO OPERADOR -->
+    <section class="controls-section" aria-label="Controles de Atendimento">
+      <h3 class="controls-title">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Painel de Comandos
+      </h3>
+
+      <div class="controls-grid">
+        <!-- Chamar Próxima Normal -->
+        <button id="btnProximaNormal" class="btn-control btn-normal-next" title="Chamar Próxima Senha Normal">
+          <span>Próxima Normal</span>
+          <span class="btn-shortcut-hint">Seta Direita (→)</span>
+        </button>
+
+        <!-- Chamar Próxima Prioridade -->
+        <button id="btnProximaPrior" class="btn-control btn-prior-next" title="Chamar Próxima Senha Prioritária">
+          <span>Próxima Prioridade</span>
+          <span class="btn-shortcut-hint">Seta Para Cima (↑)</span>
+        </button>
+
+        <!-- Repetir Chamada Atual -->
+        <button id="btnRepetir" class="btn-control btn-repeat" title="Repetir Chamada da Senha Atual no Painel/TV">
+          <span>Repetir Chamada</span>
+          <span class="btn-shortcut-hint">Tecla [R]</span>
+        </button>
+
+        <!-- Voltar Normal -->
+        <button id="btnAnteriorNormal" class="btn-control btn-normal-prev" title="Voltar Senha Normal">
+          <span>Voltar Normal</span>
+          <span class="btn-shortcut-hint">Tecla [A]</span>
+        </button>
+
+        <!-- Voltar Prioridade -->
+        <button id="btnAnteriorPrior" class="btn-control btn-prior-prev" title="Voltar Senha Prioritária">
+          <span>Voltar Prioridade</span>
+          <span class="btn-shortcut-hint">Tecla [S]</span>
+        </button>
+
+        <!-- Zerar Senhas -->
+        <button id="btnReset" class="btn-control btn-reset" title="Zerar Todos os Contadores">
+          <span>Zerar Senhas</span>
+          <span class="btn-shortcut-hint">Confirmação</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Áudio Sonoro Local -->
+  <audio id="audioChamada" preload="auto">
+    <source src="audio/chamada.wav" type="audio/wav" />
+  </audio>
+
+  <!-- ====================================================================
+       MODAL CUSTOMIZADO DE CONFIRMAÇÃO PARA ZERAR SENHAS
+       ==================================================================== -->
+  <div id="confirmResetModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <div class="modal-card">
+      <div class="modal-header">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="#dc2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <h3 id="modalTitle" class="modal-title">Zerar Todos os Contadores?</h3>
+      </div>
+      <p id="modalDesc" class="modal-description">
+        Esta ação irá zerar as senhas normais e prioritárias e limpar o histórico de chamadas do dia. Esta operação não pode ser desfeita.
+      </p>
+      <div class="modal-actions">
+        <button id="btnCancelReset" class="btn-modal btn-modal-cancel">Cancelar</button>
+        <button id="btnConfirmReset" class="btn-modal btn-modal-confirm">Sim, Zerar Senhas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rodapé com Status da Conexão Real-Time -->
+  <footer class="app-footer" role="contentinfo">
+    <div class="footer-content">
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Todos os direitos reservados.</p>
+      
+      <div class="status-indicator">
+        <span id="statusDot" class="status-dot online"></span>
+        <span id="statusText">Conectado ao Servidor</span>
+      </div>
+
+      <div class="shortcuts-legend">
+        <span class="shortcut-tag"><kbd>→</kbd> Próx Normal</span>
+        <span class="shortcut-tag"><kbd>↑</kbd> Próx Prioritária</span>
+        <span class="shortcut-tag"><kbd>R</kbd> Repetir Chamada</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
