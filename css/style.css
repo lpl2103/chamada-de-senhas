@@ -228,12 +228,98 @@ body {
 }
 
 /* Display Card Compacto no Operador */
-.admin-display-card {
-  padding: 1.5rem 1rem;
+.display-card {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+  color: var(--text-inverse);
+  border-radius: 1.25rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
-.admin-display-number {
-  font-size: clamp(3.5rem, 8vw, 6rem);
+.display-card.calling {
+  animation: pulseGlow 0.8s ease-in-out 2;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(1); box-shadow: var(--card-shadow); }
+  50% { transform: scale(1.02); box-shadow: var(--active-glow); }
+  100% { transform: scale(1); box-shadow: var(--card-shadow); }
+}
+
+.card-top-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.display-label {
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+
+.guiche-badge-pill {
+  background: var(--accent-color);
+  color: #ffffff;
+  padding: 0.3rem 1rem;
+  border-radius: 2rem;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.display-number {
+  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.display-type-badge {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.4rem 1.5rem;
+  border-radius: 2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.display-type-badge.prioridade {
+  background: var(--accent-color);
+  color: #ffffff;
+}
+
+/* Secondary Cards Gerais */
+.secondary-card {
+  background: var(--surface-color);
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
 /* Card de Emissão de Senhas (Triagem) */
@@ -293,7 +379,6 @@ body {
 }
 
 .btn-issue:active { transform: scale(0.97); }
-
 .btn-issue-normal { background: #2563eb; }
 .btn-issue-normal:hover { background: #1d4ed8; }
 
@@ -342,8 +427,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-
   cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.queue-item-pill:hover {
+  transform: translateY(-1px);
 }
 
 .queue-item-pill.prioridade {
@@ -352,19 +441,107 @@ body {
   border-color: var(--accent-color);
 }
 
-/* Painel de Controles do Operador */
-.admin-controls-panel {
+/* --------------------------------------------------------------------------
+   5. PAINEL DE CONTROLES DO OPERADOR (ESTILIZAÇÃO DE BOTÕES CORRIGIDA)
+   -------------------------------------------------------------------------- */
+.controls-section, .admin-controls-panel {
+  background: var(--surface-color);
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
   padding: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.admin-controls-grid {
+.controls-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-controls-grid, .controls-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.85rem;
 }
 
+/* Botões do Atendimento Estilizados */
+.btn-control {
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  transition: all var(--transition-fast);
+  color: #ffffff !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.btn-control:active { transform: scale(0.97); }
+.btn-control:focus-visible { outline: 3px solid var(--accent-color); outline-offset: 2px; }
+
+/* Cores Vibrantes dos Botões */
+.btn-normal-next { background-color: #2563eb !important; }
+.btn-normal-next:hover { background-color: #1d4ed8 !important; }
+
+.btn-prior-next { background-color: #d97706 !important; }
+.btn-prior-next:hover { background-color: #b45309 !important; }
+
+.btn-repeat { background-color: #059669 !important; }
+.btn-repeat:hover { background-color: #047857 !important; }
+
+.btn-normal-prev { background-color: #64748b !important; }
+.btn-normal-prev:hover { background-color: #475569 !important; }
+
+.btn-prior-prev { background-color: #78350f !important; }
+.btn-prior-prev:hover { background-color: #451a03 !important; }
+
+.btn-reset { background-color: #dc2626 !important; }
+.btn-reset:hover { background-color: #b91c1c !important; }
+
+.btn-shortcut-hint {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Histórico Recente */
+.history-list {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  list-style: none;
+}
+
+.history-item {
+  background: var(--history-bg);
+  color: var(--text-main);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --------------------------------------------------------------------------
-   5. PAINEL DO CONSULTÓRIO DO MÉDICO (atendimento.html)
+   6. PAINEL DO CONSULTÓRIO DO MÉDICO (atendimento.html)
    -------------------------------------------------------------------------- */
 .doctor-container {
   max-width: 1200px;
@@ -469,7 +646,7 @@ body {
 .btn-doctor-repeat:hover { background: #1d4ed8; }
 
 /* --------------------------------------------------------------------------
-   6. MODAL CUSTOMIZADO
+   7. MODAL CUSTOMIZADO
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
@@ -535,7 +712,7 @@ body {
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   7. ESTILOS DA TELA DE TV (tv.html)
+   8. ESTILOS DA TELA DE TV (tv.html)
    -------------------------------------------------------------------------- */
 html.tv-mode, body.tv-mode {
   height: 100vh;
@@ -615,7 +792,7 @@ html.tv-mode, body.tv-mode {
 .status-dot.offline { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
 /* --------------------------------------------------------------------------
-   8. RODAPÉ
+   9. RODAPÉ
    -------------------------------------------------------------------------- */
 .app-footer {
   background-color: var(--surface-color);
