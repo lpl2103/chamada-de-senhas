@@ -729,7 +729,7 @@ html.doctor-mode, body.doctor-mode {
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   8. ESTILOS DA TELA DE TV (tv.html - LOGO E HORA NO CANTO SUPERIOR DIREITO)
+   8. ESTILOS DA TELA DE TV (LOGO NO CANTO SUPERIOR ESQUERDO)
    -------------------------------------------------------------------------- */
 html.tv-mode, body.tv-mode {
   height: 100vh;
@@ -744,16 +744,18 @@ html.tv-mode, body.tv-mode {
   border-bottom: none;
   padding: 0.75rem 2rem 0 2rem;
   box-shadow: none;
-  display: flex;
-  justify-content: flex-end;
 }
 
-.tv-header-content { display: flex; justify-content: flex-end; width: 100%; }
+.tv-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
 
-.tv-header-right {
+.tv-header-left {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
 }
 
 .tv-brand-logo {
