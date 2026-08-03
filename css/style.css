@@ -387,7 +387,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   5. PAINEL DE CONTROLE DE BOTOES
+   5. PAINEL DE CONTROLE DE BOTÕES (OPERADOR)
    -------------------------------------------------------------------------- */
 .controls-section {
   background: var(--surface-color);
@@ -551,16 +551,29 @@ body {
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   7. ESTILOS DA TELA DE TV (tv.html)
+   7. ESTILOS OTIMIZADOS PARA TELA DE TV (100% CABE NA VIEWPORT / SEM SCROLL)
    -------------------------------------------------------------------------- */
-.tv-mode {
-  background-color: var(--bg-color);
+html.tv-mode, body.tv-mode {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.tv-header-info {
+.tv-header-minimal {
+  background-color: transparent;
+  border-bottom: none;
+  padding: 0.75rem 2rem 0 2rem;
+  box-shadow: none;
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  justify-content: flex-end;
+}
+
+.tv-header-content {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .clock-display {
@@ -571,65 +584,91 @@ body {
 }
 
 .clock-time {
-  font-size: 1.4rem;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
   font-weight: 900;
   color: var(--primary-color);
   line-height: 1;
 }
 
 .clock-date {
-  font-size: 0.8rem;
+  font-size: clamp(0.75rem, 1.2vw, 1rem);
   color: var(--text-muted);
   text-transform: capitalize;
 }
 
 .tv-container {
-  max-width: 1600px;
-  padding: 2rem;
-  gap: 2rem;
+  max-width: 1800px;
+  width: 100%;
+  padding: 0.75rem 2rem;
+  gap: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0; /* Previne estouro flexbox */
 }
 
+/* Card Principal de Exibição na TV */
 .tv-display-card {
-  padding: 4rem 2rem;
-  min-height: 60vh;
+  flex: 1;
+  min-height: 0;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .tv-card-header {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
 }
 
 .tv-guiche-badge {
   background: #ffffff;
   color: var(--primary-color);
-  padding: 0.5rem 2rem;
+  padding: 0.4rem 1.75rem;
   border-radius: 3rem;
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-size: clamp(1.4rem, 3vw, 2.5rem);
   font-weight: 900;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .tv-display-number {
-  font-size: clamp(7rem, 22vw, 16rem);
+  font-size: clamp(5.5rem, 18vw, 14rem);
+  line-height: 0.9;
 }
 
 .tv-type-badge {
-  font-size: clamp(1.3rem, 2.5vw, 2rem);
-  padding: 0.6rem 2.5rem;
+  font-size: clamp(1.1rem, 2vw, 1.75rem);
+  padding: 0.4rem 2rem;
+  margin-top: 0.5rem;
 }
 
+/* Card Inferior do Histórico */
 .tv-history-card {
-  padding: 2rem;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0; /* Garante que não diminua excessivamente */
+}
+
+.tv-history-title {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
 }
 
 .tv-history-list .history-item {
-  font-size: 1.5rem;
-  padding: 0.6rem 1.25rem;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  padding: 0.35rem 1rem;
 }
 
-/* Indicator Status Dot */
+.tv-footer {
+  padding: 0.5rem 2rem;
+  flex-shrink: 0;
+}
+
+/* Indicador de Status */
 .status-indicator {
   display: flex;
   align-items: center;
@@ -647,12 +686,12 @@ body {
 .status-dot.offline { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
 /* --------------------------------------------------------------------------
-   8. RODAPÉ
+   8. RODAPÉ (GERAL)
    -------------------------------------------------------------------------- */
 .app-footer {
   background-color: var(--surface-color);
   border-top: 1px solid var(--surface-border);
-  padding: 1rem 2rem;
+  padding: 0.85rem 2rem;
   text-align: center;
   font-size: 0.85rem;
   color: var(--text-muted);

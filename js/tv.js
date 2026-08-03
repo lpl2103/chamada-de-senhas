@@ -4,8 +4,8 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Recebe notificações via WebSocket ou BroadcastChannel, executa
- *            o gingle sonoro, a síntese de voz e gerencia a exibição em tela cheia.
+ *            Ajustado para caber 100% na viewport (sem rolagem), aciona
+ *            modo fullscreen no primeiro clique/tecla e sincroniza chamadas.
  * ============================================================================
  */
 
@@ -28,11 +28,7 @@ class ChamaSenhaTV {
       digitalDate: document.getElementById('digitalDate'),
       audioChamada: document.getElementById('audioChamada'),
       statusDot: document.getElementById('statusDot'),
-      statusText: document.getElementById('statusText'),
-      fullscreenBtn: document.getElementById('fullscreenBtn'),
-      themeToggleBtn: document.getElementById('themeToggleBtn'),
-      soundToggleBtn: document.getElementById('soundToggleBtn'),
-      speechToggleBtn: document.getElementById('speechToggleBtn')
+      statusText: document.getElementById('statusText')
     };
 
     this.init();
@@ -46,24 +42,28 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado.');
+    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Modo Viewport Fit).');
   }
 
   /**
-   * Conecta os eventos de botões e tela cheia.
+   * Conecta os escutadores de tela cheia automática e navegação.
    */
   bindEvents() {
-    this.dom.fullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
-    this.dom.themeToggleBtn?.addEventListener('click', () => this.toggleTheme());
-    this.dom.soundToggleBtn?.addEventListener('click', () => this.toggleSound());
-    this.dom.speechToggleBtn?.addEventListener('click', () => this.toggleSpeech());
+    // Ao clicar em qualquer ponto da tela ou pressionar qualquer tecla, ativa Tela Cheia (Fullscreen)
+    const requestFullscreenHandler = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    };
+
+    document.addEventListener('click', requestFullscreenHandler, { once: false });
+    document.addEventListener('keydown', requestFullscreenHandler, { once: false });
   }
 
   /**
    * Configura o sistema de comunicação (WebSocket principal + BroadcastChannel fallback).
    */
   initCommunication() {
-    // 1. Tenta Conectar via WebSocket (se houver backend executando)
     if (window.location.protocol.startsWith('http')) {
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${wsProtocol}//${window.location.host}`;
@@ -100,7 +100,7 @@ class ChamaSenhaTV {
       this.setupFallbackChannel();
     }
 
-    // 2. Escuta eventos de localStorage para atualização de abas do mesmo navegador
+    // Escuta eventos de localStorage para atualização de abas do mesmo navegador
     window.addEventListener('storage', (e) => {
       if (e.key === 'chama_senha_state_v1' && e.newValue) {
         try {
@@ -178,7 +178,7 @@ class ChamaSenhaTV {
         const itemVazio = document.createElement('li');
         itemVazio.className = 'history-item';
         itemVazio.style.opacity = '0.6';
-        itemVazio.textContent = 'Nenhuma chamada anterior';
+        itemVazio.textContent = 'Aguardando início do atendimento...';
         this.dom.historicoLista.appendChild(itemVazio);
       } else {
         historico.forEach((item) => {
@@ -284,57 +284,12 @@ class ChamaSenhaTV {
   }
 
   /**
-   * Alterna entre modo normal e Tela Cheia (Fullscreen API).
-   */
-  toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn('[TV Fullscreen]: Falha ao entrar em tela cheia:', err);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  }
-
-  /**
-   * Alterna o tema Claro / Escuro.
-   */
-  toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('chama_senha_theme', newTheme);
-  }
-
-  /**
    * Carrega o tema salvo.
    */
   initTheme() {
     const savedTheme = localStorage.getItem('chama_senha_theme');
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  }
-
-  /**
-   * Alterna habilitação do áudio sonoro.
-   */
-  toggleSound() {
-    this.somHabilitado = !this.somHabilitado;
-    if (this.dom.soundToggleBtn) {
-      this.dom.soundToggleBtn.style.opacity = this.somHabilitado ? '1' : '0.5';
-    }
-  }
-
-  /**
-   * Alterna habilitação do anúncio por voz.
-   */
-  toggleSpeech() {
-    this.vozHabilitada = !this.vozHabilitada;
-    if (this.dom.speechToggleBtn) {
-      this.dom.speechToggleBtn.style.opacity = this.vozHabilitada ? '1' : '0.5';
     }
   }
 }
