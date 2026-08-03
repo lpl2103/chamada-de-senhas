@@ -4,7 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Exibe no histórico o número da senha e quem chamou (ex: P003 - Consultório A).
+ *            Exibe o histórico em Lista Vertical formatada (P003 - Consultório A).
  * ============================================================================
  */
 
@@ -38,7 +38,7 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Histórico com Local).');
+    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Lista Vertical).');
   }
 
   bindEvents() {
@@ -146,10 +146,11 @@ class ChamaSenhaTV {
       this.dom.displayTypeBadge.className = `display-type-badge tv-type-badge ${isPrior ? 'prioridade' : 'normal'}`;
     }
 
-    // Atualiza o Histórico exibindo: Senha - Quem Chamou (ex: P003 - Consultório A)
+    // Renderiza a Lista Vertical do Histórico
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
       const historico = state.historico || [];
+
       if (historico.length === 0) {
         const itemVazio = document.createElement('li');
         itemVazio.className = 'history-item';
@@ -160,15 +161,30 @@ class ChamaSenhaTV {
         historico.forEach((item) => {
           const li = document.createElement('li');
           li.className = 'history-item';
-          
-          let formattedText = '';
+
+          let ticketId = '';
+          let destination = '';
+
           if (typeof item === 'object' && item !== null) {
-            formattedText = item.text || `${item.ticketId} - ${item.destination}`;
+            ticketId = item.ticketId || item.id || '';
+            destination = item.destination || item.guiche || '';
           } else {
-            formattedText = String(item);
+            const textStr = String(item);
+            if (textStr.includes('-')) {
+              const parts = textStr.split('-');
+              ticketId = parts[0].trim();
+              destination = parts.slice(1).join('-').trim();
+            } else {
+              ticketId = textStr;
+            }
           }
 
-          li.textContent = formattedText;
+          if (destination) {
+            li.innerHTML = `<strong>${ticketId}</strong> <span style="opacity: 0.85; font-weight: 600;">- ${destination}</span>`;
+          } else {
+            li.textContent = ticketId;
+          }
+
           this.dom.historicoLista.appendChild(li);
         });
       }
