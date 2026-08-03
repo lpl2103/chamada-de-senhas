@@ -2,9 +2,7 @@
  * ============================================================================
  * SISTEMA CHAMA SENHA - SERVIDOR BACKEND (NODE.JS REAL-TIME & PERSISTÊNCIA)
  * ============================================================================
- * Servidor HTTP e WebSocket nativo com persistência em data/state.json e
- * reset automático diário às 00:00 (troca de data).
- * Gerencia a Fila de Atendimento e formato detalhado do histórico (Senha - Local).
+ * Servidor HTTP e WebSocket nativo com suporte a histórico limitado a 3 itens.
  * ============================================================================
  */
 
@@ -33,7 +31,7 @@ function createInitialState() {
     guicheAtual: 'Recepção',
     tipoAtendimento: 'Aguardando Chamada',
     queue: [],
-    historico: [], // Armazena [{ ticketId, destination, text: 'P003 - Consultório A' }]
+    historico: [], // Armazena no máximo 3 itens
     somHabilitado: true,
     vozHabilitada: true
   };
@@ -61,6 +59,7 @@ function loadPersistedState() {
         saveStateToDisk();
       } else {
         appState = { ...createInitialState(), ...loaded };
+        appState.historico = (appState.historico || []).slice(0, 3);
         console.log('[ChamaSenha]: Estado anterior carregado do disco com sucesso.');
       }
     } else {
@@ -253,7 +252,7 @@ function handleClientMessage(senderSocket, message) {
 
           if (!appState.historico.length || appState.historico[0].ticketId !== ticketToCall.id) {
             appState.historico.unshift(historyEntry);
-            if (appState.historico.length > 5) appState.historico.pop();
+            if (appState.historico.length > 3) appState.historico.pop(); // Limita a 3 itens
           }
 
           saveStateToDisk();
@@ -266,6 +265,7 @@ function handleClientMessage(senderSocket, message) {
 
       case 'CALL_TICKET': {
         appState = { ...appState, ...data.payload };
+        if (appState.historico.length > 3) appState.historico = appState.historico.slice(0, 3);
         saveStateToDisk();
         broadcastMessage({ type: 'TICKET_CALLED', payload: appState });
         break;
@@ -326,7 +326,7 @@ function parseWebSocketFrame(buffer) {
   if (buffer.length < 2) return null;
 
   const opcode = buffer[0] & 0x0f;
-  if (opcode !== 0x1) return null; // Filtra pings/pongs e control frames não-texto
+  if (opcode !== 0x1) return null;
 
   const secondByte = buffer[1];
   const isMasked = (secondByte & 0x80) !== 0;

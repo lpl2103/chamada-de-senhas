@@ -4,7 +4,8 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Exibe o histórico em Lista Vertical formatada (P003 - Consultório A).
+ *            Exibe o histórico em Lista Vertical limitado estritamente a 3 itens
+ *            para garantir o encaixe perfeito na viewport sem barra de rolagem.
  * ============================================================================
  */
 
@@ -38,7 +39,7 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Lista Vertical).');
+    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Máximo 3 itens no Histórico).');
   }
 
   bindEvents() {
@@ -146,10 +147,11 @@ class ChamaSenhaTV {
       this.dom.displayTypeBadge.className = `display-type-badge tv-type-badge ${isPrior ? 'prioridade' : 'normal'}`;
     }
 
-    // Renderiza a Lista Vertical do Histórico
+    // Renderiza a Lista Vertical do Histórico LIMITADA A APENAS 3 ITENS
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
-      const historico = state.historico || [];
+      const rawHistorico = state.historico || [];
+      const historico = rawHistorico.slice(0, 3); // Limite rígido de 3 itens para não estourar a tela
 
       if (historico.length === 0) {
         const itemVazio = document.createElement('li');
