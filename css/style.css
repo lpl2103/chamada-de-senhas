@@ -729,7 +729,7 @@ html.doctor-mode, body.doctor-mode {
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   8. ESTILOS DA TELA DE TV (tv.html - HISTÓRICO EM LISTA VERTICAL)
+   8. ESTILOS DA TELA DE TV (tv.html - LOGO E HORA NO CANTO SUPERIOR DIREITO)
    -------------------------------------------------------------------------- */
 html.tv-mode, body.tv-mode {
   height: 100vh;
@@ -749,6 +749,18 @@ html.tv-mode, body.tv-mode {
 }
 
 .tv-header-content { display: flex; justify-content: flex-end; width: 100%; }
+
+.tv-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.tv-brand-logo {
+  height: clamp(38px, 4.5vw, 58px);
+  width: auto;
+  object-fit: contain;
+}
 
 .clock-display {
   display: flex;
@@ -811,7 +823,7 @@ html.tv-mode, body.tv-mode {
 
 .tv-history-list {
   display: flex;
-  flex-direction: column; /* FORÇA EXIBIÇÃO EM LISTA VERTICAL */
+  flex-direction: column;
   align-items: center;
   gap: 0.35rem;
   list-style: none;
