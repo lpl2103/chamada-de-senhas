@@ -4,7 +4,7 @@
  * ============================================================================
  * Servidor HTTP e WebSocket nativo com persistência em data/state.json e
  * reset automático diário às 00:00 (troca de data).
- * Gerencia a Fila de Atendimento (Emissão na Recepção -> Chamada pelos Consultórios)
+ * Gerencia a Fila de Atendimento e formato detalhado do histórico (Senha - Local).
  * ============================================================================
  */
 
@@ -18,17 +18,11 @@ const PUBLIC_DIR = __dirname;
 const DATA_DIR = path.join(__dirname, 'data');
 const STATE_FILE = path.join(DATA_DIR, 'state.json');
 
-/**
- * Função Auxiliar: Retorna a data atual formatada (DD/MM/YYYY)
- */
 function getTodayDateString() {
   const now = new Date();
   return now.toLocaleDateString('pt-BR');
 }
 
-/**
- * Estado Padrão Inicial
- */
 function createInitialState() {
   return {
     dailyDate: getTodayDateString(),
@@ -38,8 +32,8 @@ function createInitialState() {
     ultimaSenhaText: '0000',
     guicheAtual: 'Recepção',
     tipoAtendimento: 'Aguardando Chamada',
-    queue: [], // Lista de senhas aguardando: [{ id, number, type, destination, createdAt }]
-    historico: [], // Lista de chamadas realizadas: [{ ticketId, destination, calledAt }]
+    queue: [],
+    historico: [], // Armazena [{ ticketId, destination, text: 'P003 - Consultório A' }]
     somHabilitado: true,
     vozHabilitada: true
   };
@@ -47,9 +41,6 @@ function createInitialState() {
 
 let appState = createInitialState();
 
-/**
- * Garante que o diretório data/ exista e carrega/salva o estado
- */
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -63,7 +54,6 @@ function loadPersistedState() {
       const data = fs.readFileSync(STATE_FILE, 'utf-8');
       const loaded = JSON.parse(data);
       
-      // Verifica se o dia mudou para reset automático diário
       const today = getTodayDateString();
       if (loaded.dailyDate !== today) {
         console.log(`[ChamaSenha]: Novo dia detectado (${today}). Resetando contadores diariamente...`);
@@ -71,7 +61,7 @@ function loadPersistedState() {
         saveStateToDisk();
       } else {
         appState = { ...createInitialState(), ...loaded };
-        console.log('[ChamaSenha]: Estado anterior carregado com sucesso do disco.');
+        console.log('[ChamaSenha]: Estado anterior carregado do disco com sucesso.');
       }
     } else {
       saveStateToDisk();
@@ -90,9 +80,6 @@ function saveStateToDisk() {
   }
 }
 
-/**
- * Verifica se a data atual mudou durante a execução
- */
 function checkDailyReset() {
   const today = getTodayDateString();
   if (appState.dailyDate !== today) {
@@ -103,13 +90,9 @@ function checkDailyReset() {
   }
 }
 
-// Carrega o estado ao iniciar o servidor
 loadPersistedState();
-
-// Verifica a cada 1 minuto se houve virada de dia
 setInterval(checkDailyReset, 60000);
 
-// Conexões WebSocket Ativas
 const clients = new Set();
 
 const MIME_TYPES = {
@@ -125,9 +108,6 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml'
 };
 
-/**
- * Servidor HTTP de Arquivos Estáticos e API REST
- */
 const server = http.createServer((req, res) => {
   checkDailyReset();
 
@@ -161,9 +141,6 @@ const server = http.createServer((req, res) => {
   });
 });
 
-/**
- * Upgrade HTTP -> WebSocket (RFC 6455)
- */
 server.on('upgrade', (req, socket, head) => {
   const secWsKey = req.headers['sec-websocket-key'];
   if (!secWsKey) {
@@ -187,7 +164,6 @@ server.on('upgrade', (req, socket, head) => {
   socket.write(headers.join('\r\n') + '\r\n\r\n');
   clients.add(socket);
 
-  // Envia estado inicial
   sendWebSocketFrame(socket, JSON.stringify({ type: 'INIT_STATE', payload: appState }));
 
   socket.on('data', (buffer) => {
@@ -201,18 +177,14 @@ server.on('upgrade', (req, socket, head) => {
   socket.on('error', () => clients.delete(socket));
 });
 
-/**
- * Processador de Comandos WebSocket
- */
 function handleClientMessage(senderSocket, message) {
   try {
     const data = JSON.parse(message);
     checkDailyReset();
 
     switch (data.type) {
-      // 1. Emissão de nova senha na Recepção
       case 'ISSUE_TICKET': {
-        const { type, destination } = data.payload; // type = 'NORMAL' | 'PRIORIDADE'
+        const { type, destination } = data.payload;
         let newTicketId = '';
 
         if (type === 'PRIORIDADE') {
@@ -237,19 +209,16 @@ function handleClientMessage(senderSocket, message) {
         break;
       }
 
-      // 2. Chamada de senha pelo Consultório ou Recepção
       case 'CALL_NEXT': {
         const { destination, specificTicketId } = data.payload || {};
         let ticketToCall = null;
 
         if (specificTicketId) {
-          // Chamada de uma senha específica escolhida na lista
           const index = appState.queue.findIndex(t => t.id === specificTicketId);
           if (index !== -1) {
             ticketToCall = appState.queue.splice(index, 1)[0];
           }
         } else if (destination && destination !== 'Geral') {
-          // Tenta pegar primeiro da prioridade para o consultório, depois normal do consultório, depois prioridade geral
           let index = appState.queue.findIndex(t => t.destination === destination && t.type === 'PRIORIDADE');
           if (index === -1) index = appState.queue.findIndex(t => t.destination === destination);
           if (index === -1) index = appState.queue.findIndex(t => t.type === 'PRIORIDADE');
@@ -259,7 +228,6 @@ function handleClientMessage(senderSocket, message) {
             ticketToCall = appState.queue.splice(index, 1)[0];
           }
         } else {
-          // Chamada sequencial padrão (Primeiro Prioridade, depois Normal)
           let index = appState.queue.findIndex(t => t.type === 'PRIORIDADE');
           if (index === -1 && appState.queue.length > 0) index = 0;
 
@@ -277,21 +245,25 @@ function handleClientMessage(senderSocket, message) {
           appState.guicheAtual = destination || ticketToCall.destination || 'Recepção';
           appState.tipoAtendimento = ticketToCall.type === 'PRIORIDADE' ? 'Atendimento Prioritário' : 'Atendimento Normal';
 
-          if (!appState.historico.includes(ticketToCall.id)) {
-            appState.historico.unshift(ticketToCall.id);
+          const historyEntry = {
+            ticketId: ticketToCall.id,
+            destination: appState.guicheAtual,
+            text: `${ticketToCall.id} - ${appState.guicheAtual}`
+          };
+
+          if (!appState.historico.length || appState.historico[0].ticketId !== ticketToCall.id) {
+            appState.historico.unshift(historyEntry);
             if (appState.historico.length > 5) appState.historico.pop();
           }
 
           saveStateToDisk();
           broadcastMessage({ type: 'TICKET_CALLED', payload: appState });
         } else {
-          // Se não houver fila, re-chamada ou notificação
           broadcastMessage({ type: 'QUEUE_EMPTY', payload: appState });
         }
         break;
       }
 
-      // 3. Incremento / Chamada Direta Simples (Modo Legado / Manual)
       case 'CALL_TICKET': {
         appState = { ...appState, ...data.payload };
         saveStateToDisk();
@@ -299,13 +271,11 @@ function handleClientMessage(senderSocket, message) {
         break;
       }
 
-      // 4. Repetir Chamada Atual
       case 'REPEAT_CALL': {
         broadcastMessage({ type: 'TICKET_REPEATED', payload: appState });
         break;
       }
 
-      // 5. Reset Manual
       case 'RESET_TICKETS': {
         appState = createInitialState();
         saveStateToDisk();
@@ -354,15 +324,21 @@ function sendWebSocketFrame(socket, text) {
 
 function parseWebSocketFrame(buffer) {
   if (buffer.length < 2) return null;
+
+  const opcode = buffer[0] & 0x0f;
+  if (opcode !== 0x1) return null; // Filtra pings/pongs e control frames não-texto
+
   const secondByte = buffer[1];
   const isMasked = (secondByte & 0x80) !== 0;
   let payloadLength = secondByte & 0x7f;
 
   let offset = 2;
   if (payloadLength === 126) {
+    if (buffer.length < 4) return null;
     payloadLength = buffer.readUInt16BE(2);
     offset = 4;
   } else if (payloadLength === 127) {
+    if (buffer.length < 10) return null;
     payloadLength = Number(buffer.readBigUInt64BE(2));
     offset = 10;
   }
@@ -371,6 +347,8 @@ function parseWebSocketFrame(buffer) {
 
   const maskingKey = buffer.slice(offset, offset + 4);
   offset += 4;
+
+  if (buffer.length < offset + payloadLength) return null;
 
   const payload = buffer.slice(offset, offset + payloadLength);
   const unmasked = Buffer.alloc(payloadLength);

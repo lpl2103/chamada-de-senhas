@@ -3,9 +3,8 @@
  * SISTEMA CHAMA SENHA - SCRIPT DA RECEPÇÃO & TRIAGEM (VANILLA JAVASCRIPT ES6+)
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
- * Descrição: Script principal da Recepção (index.html). Gerencia a emissão
- *            de novas senhas (triagem), atribuição a consultórios, fila de espera
- *            em tempo real, botões de ação e sincronização (WebSocket/BroadcastChannel).
+ * Descrição: Script principal da Recepção (index.html). Suporte ao histórico
+ *            detalhado no formato 'P003 - Consultório A'.
  * ============================================================================
  */
 
@@ -91,7 +90,6 @@ class ChamaSenhaApp {
     this.socket = null;
     this.broadcastChannel = null;
 
-    // Elementos do DOM
     this.dom = {
       senhaAtualNumero: document.getElementById('senhaAtualNumero'),
       ultimaSenhaNumero: document.getElementById('ultimaSenhaNumero'),
@@ -135,23 +133,19 @@ class ChamaSenhaApp {
   bindEvents() {
     document.addEventListener('keydown', (e) => this.handleKeyDown(e));
 
-    // Emissão de Senhas (Triagem)
     this.dom.btnIssueNormal?.addEventListener('click', () => this.emitirSenha('NORMAL'));
     this.dom.btnIssuePrior?.addEventListener('click', () => this.emitirSenha('PRIORIDADE'));
 
-    // Ações de Chamada
     this.dom.btnProximaNormal?.addEventListener('click', () => this.chamarProxima('NORMAL'));
     this.dom.btnProximaPrior?.addEventListener('click', () => this.chamarProxima('PRIORIDADE'));
     this.dom.btnRepetir?.addEventListener('click', () => this.repetirChamada());
     this.dom.btnAnteriorNormal?.addEventListener('click', () => this.voltarNormal());
     this.dom.btnAnteriorPrior?.addEventListener('click', () => this.voltarPrioridade());
 
-    // Modal Reset
     this.dom.btnReset?.addEventListener('click', () => this.abrirModalReset());
     this.dom.btnCancelReset?.addEventListener('click', () => this.fecharModalReset());
     this.dom.btnConfirmReset?.addEventListener('click', () => this.executarReset());
 
-    // Preferências
     this.dom.themeToggleBtn?.addEventListener('click', () => this.toggleTheme());
     this.dom.soundToggleBtn?.addEventListener('click', () => this.toggleSound());
     this.dom.speechToggleBtn?.addEventListener('click', () => this.toggleSpeech());
@@ -244,7 +238,6 @@ class ChamaSenhaApp {
     const destination = this.dom.issueDestinationSelect?.value || 'Geral';
     this.sendEvent('ISSUE_TICKET', { type: tipo, destination });
 
-    // Fallback local se estiver sem backend
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       let id = '';
       if (tipo === 'PRIORIDADE') {
@@ -265,7 +258,6 @@ class ChamaSenhaApp {
   chamarProxima(preferredType = '') {
     this.sendEvent('CALL_NEXT', { destination: 'Recepção', preferredType });
 
-    // Fallback local sem backend
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       let index = -1;
       if (preferredType === 'PRIORIDADE') {
@@ -283,10 +275,14 @@ class ChamaSenhaApp {
         this.state.guicheAtual = 'Recepção';
         this.state.tipoAtendimento = ticket.type === 'PRIORIDADE' ? 'Atendimento Prioritário' : 'Atendimento Normal';
 
-        if (!this.state.historico.includes(ticket.id)) {
-          this.state.historico.unshift(ticket.id);
-          if (this.state.historico.length > 5) this.state.historico.pop();
-        }
+        const historyEntry = {
+          ticketId: ticket.id,
+          destination: 'Recepção',
+          text: `${ticket.id} - Recepção`
+        };
+
+        this.state.historico.unshift(historyEntry);
+        if (this.state.historico.length > 5) this.state.historico.pop();
 
         this.state.saveToStorage();
         this.updateUI();
@@ -381,7 +377,6 @@ class ChamaSenhaApp {
       }
     }
 
-    // Atualiza Fila de Espera
     const queue = this.state.queue || [];
     if (this.dom.totalQueueCount) this.dom.totalQueueCount.textContent = queue.length;
 
@@ -401,7 +396,6 @@ class ChamaSenhaApp {
       }
     }
 
-    // Histórico
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
       if (this.state.historico.length === 0) {
@@ -414,7 +408,15 @@ class ChamaSenhaApp {
         this.state.historico.forEach((item) => {
           const li = document.createElement('li');
           li.className = 'history-item';
-          li.textContent = item;
+          
+          let formattedText = '';
+          if (typeof item === 'object' && item !== null) {
+            formattedText = item.text || `${item.ticketId} - ${item.destination}`;
+          } else {
+            formattedText = String(item);
+          }
+
+          li.textContent = formattedText;
           this.dom.historicoLista.appendChild(li);
         });
       }

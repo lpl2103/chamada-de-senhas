@@ -4,8 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Ajustado para caber 100% na viewport (sem rolagem), aciona
- *            modo fullscreen no primeiro clique/tecla e sincroniza chamadas.
+ *            Exibe no histórico o número da senha e quem chamou (ex: P003 - Consultório A).
  * ============================================================================
  */
 
@@ -34,22 +33,15 @@ class ChamaSenhaTV {
     this.init();
   }
 
-  /**
-   * Inicialização da aplicação na TV.
-   */
   init() {
     this.initClock();
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Modo Viewport Fit).');
+    console.log('[ChamaSenha TV]: Painel de Exibição da TV inicializado (Histórico com Local).');
   }
 
-  /**
-   * Conecta os escutadores de tela cheia automática e navegação.
-   */
   bindEvents() {
-    // Ao clicar em qualquer ponto da tela ou pressionar qualquer tecla, ativa Tela Cheia (Fullscreen)
     const requestFullscreenHandler = () => {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -60,9 +52,6 @@ class ChamaSenhaTV {
     document.addEventListener('keydown', requestFullscreenHandler, { once: false });
   }
 
-  /**
-   * Configura o sistema de comunicação (WebSocket principal + BroadcastChannel fallback).
-   */
   initCommunication() {
     if (window.location.protocol.startsWith('http')) {
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -100,7 +89,6 @@ class ChamaSenhaTV {
       this.setupFallbackChannel();
     }
 
-    // Escuta eventos de localStorage para atualização de abas do mesmo navegador
     window.addEventListener('storage', (e) => {
       if (e.key === 'chama_senha_state_v1' && e.newValue) {
         try {
@@ -111,9 +99,6 @@ class ChamaSenhaTV {
     });
   }
 
-  /**
-   * Configura o fallback BroadcastChannel para comunicação local no navegador.
-   */
   setupFallbackChannel() {
     if ('BroadcastChannel' in window && !this.broadcastChannel) {
       this.broadcastChannel = new BroadcastChannel('chama_senha_channel');
@@ -124,10 +109,6 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Processa as mensagens recebidas via WebSocket ou BroadcastChannel.
-   * @param {Object} data - Dados da mensagem.
-   */
   handleIncomingMessage(data) {
     if (!data || !data.payload) return;
 
@@ -150,11 +131,6 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Renderiza o estado na tela da TV e dispara alertas sonoros/voz se solicitado.
-   * @param {Object} state - Estado atual dos contadores.
-   * @param {boolean} triggerAlerts - Se deve acionar áudio e voz.
-   */
   renderState(state, triggerAlerts = false) {
     if (this.dom.senhaAtualNumero) {
       this.dom.senhaAtualNumero.textContent = state.senhaAtualText || '0000';
@@ -170,7 +146,7 @@ class ChamaSenhaTV {
       this.dom.displayTypeBadge.className = `display-type-badge tv-type-badge ${isPrior ? 'prioridade' : 'normal'}`;
     }
 
-    // Atualiza Histórico
+    // Atualiza o Histórico exibindo: Senha - Quem Chamou (ex: P003 - Consultório A)
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
       const historico = state.historico || [];
@@ -184,13 +160,20 @@ class ChamaSenhaTV {
         historico.forEach((item) => {
           const li = document.createElement('li');
           li.className = 'history-item';
-          li.textContent = item;
+          
+          let formattedText = '';
+          if (typeof item === 'object' && item !== null) {
+            formattedText = item.text || `${item.ticketId} - ${item.destination}`;
+          } else {
+            formattedText = String(item);
+          }
+
+          li.textContent = formattedText;
           this.dom.historicoLista.appendChild(li);
         });
       }
     }
 
-    // Se for uma nova chamada ou repetição, dispara alertas e animação
     if (triggerAlerts && state.senhaAtualText !== '0000') {
       this.animateCard();
       if (this.somHabilitado) this.tocarGingle();
@@ -198,20 +181,14 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Efeito de pulso visual no card quando uma senha é chamada.
-   */
   animateCard() {
     if (this.dom.displayCard) {
       this.dom.displayCard.classList.remove('calling');
-      void this.dom.displayCard.offsetWidth; // Reflow
+      void this.dom.displayCard.offsetWidth;
       this.dom.displayCard.classList.add('calling');
     }
   }
 
-  /**
-   * Toca o sinal sonoro da chamada.
-   */
   tocarGingle() {
     if (this.dom.audioChamada) {
       this.dom.audioChamada.currentTime = 0;
@@ -222,9 +199,6 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Anuncia a senha e o guichê por sintetizador de voz.
-   */
   anunciarVoz(senhaStr, guicheStr) {
     if (!this.speechSynth) return;
 
@@ -248,9 +222,6 @@ class ChamaSenhaTV {
     this.speechSynth.speak(utterance);
   }
 
-  /**
-   * Atualiza o indicador visual do status de conexão.
-   */
   updateConnectionStatus(isOnline, text) {
     if (this.dom.statusDot) {
       this.dom.statusDot.className = `status-dot ${isOnline ? 'online' : 'offline'}`;
@@ -260,9 +231,6 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Inicializa o relógio digital e data no cabeçalho.
-   */
   initClock() {
     const updateTime = () => {
       const now = new Date();
@@ -283,9 +251,6 @@ class ChamaSenhaTV {
     setInterval(updateTime, 1000);
   }
 
-  /**
-   * Carrega o tema salvo.
-   */
   initTheme() {
     const savedTheme = localStorage.getItem('chama_senha_theme');
     if (savedTheme) {
@@ -294,7 +259,6 @@ class ChamaSenhaTV {
   }
 }
 
-// Inicializa a TV assim que o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   window.chamaSenhaTV = new ChamaSenhaTV();
 });
