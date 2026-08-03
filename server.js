@@ -1,10 +1,10 @@
 /**
  * ============================================================================
- * SISTEMA CHAMA SENHA - SERVIDOR BACKEND (NODE.JS REAL-TIME)
+ * SISTEMA CHAMA SENHA - SERVIDOR BACKEND (NODE.JS REAL-TIME & PERSISTÊNCIA)
  * ============================================================================
- * Servidor HTTP e WebSocket nativo sem dependências externas.
- * Fornece arquivos estáticos e sincroniza eventos de chamada de senha entre
- * múltiplos dispositivos conectados na mesma rede local (LAN).
+ * Servidor HTTP e WebSocket nativo com persistência em data/state.json e
+ * reset automático diário às 00:00 (troca de data).
+ * Gerencia a Fila de Atendimento (Emissão na Recepção -> Chamada pelos Consultórios)
  * ============================================================================
  */
 
@@ -15,24 +15,103 @@ const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = __dirname;
-
-// Estado centralizado do servidor
-let appState = {
-  senhaNormal: 0,
-  senhaPrioridade: 0,
-  senhaAtualText: '0000',
-  ultimaSenhaText: '0000',
-  guicheAtual: 'Guichê 01',
-  tipoAtendimento: 'Aguardando Chamada',
-  historico: []
-};
-
-// Lista de conexões WebSocket ativas
-const clients = new Set();
+const DATA_DIR = path.join(__dirname, 'data');
+const STATE_FILE = path.join(DATA_DIR, 'state.json');
 
 /**
- * Mapeamento de tipos MIME para arquivos estáticos
+ * Função Auxiliar: Retorna a data atual formatada (DD/MM/YYYY)
  */
+function getTodayDateString() {
+  const now = new Date();
+  return now.toLocaleDateString('pt-BR');
+}
+
+/**
+ * Estado Padrão Inicial
+ */
+function createInitialState() {
+  return {
+    dailyDate: getTodayDateString(),
+    senhaNormalCount: 0,
+    senhaPrioridadedCount: 0,
+    senhaAtualText: '0000',
+    ultimaSenhaText: '0000',
+    guicheAtual: 'Recepção',
+    tipoAtendimento: 'Aguardando Chamada',
+    queue: [], // Lista de senhas aguardando: [{ id, number, type, destination, createdAt }]
+    historico: [], // Lista de chamadas realizadas: [{ ticketId, destination, calledAt }]
+    somHabilitado: true,
+    vozHabilitada: true
+  };
+}
+
+let appState = createInitialState();
+
+/**
+ * Garante que o diretório data/ exista e carrega/salva o estado
+ */
+function ensureDataDir() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+function loadPersistedState() {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(STATE_FILE)) {
+      const data = fs.readFileSync(STATE_FILE, 'utf-8');
+      const loaded = JSON.parse(data);
+      
+      // Verifica se o dia mudou para reset automático diário
+      const today = getTodayDateString();
+      if (loaded.dailyDate !== today) {
+        console.log(`[ChamaSenha]: Novo dia detectado (${today}). Resetando contadores diariamente...`);
+        appState = createInitialState();
+        saveStateToDisk();
+      } else {
+        appState = { ...createInitialState(), ...loaded };
+        console.log('[ChamaSenha]: Estado anterior carregado com sucesso do disco.');
+      }
+    } else {
+      saveStateToDisk();
+    }
+  } catch (err) {
+    console.error('[ChamaSenha Error]: Falha ao carregar estado do disco:', err);
+  }
+}
+
+function saveStateToDisk() {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(STATE_FILE, JSON.stringify(appState, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[ChamaSenha Error]: Falha ao salvar estado no disco:', err);
+  }
+}
+
+/**
+ * Verifica se a data atual mudou durante a execução
+ */
+function checkDailyReset() {
+  const today = getTodayDateString();
+  if (appState.dailyDate !== today) {
+    console.log(`[ChamaSenha Auto-Reset]: Virada de dia (${today}). Resetando contadores...`);
+    appState = createInitialState();
+    saveStateToDisk();
+    broadcastMessage({ type: 'TICKETS_RESET', payload: appState });
+  }
+}
+
+// Carrega o estado ao iniciar o servidor
+loadPersistedState();
+
+// Verifica a cada 1 minuto se houve virada de dia
+setInterval(checkDailyReset, 60000);
+
+// Conexões WebSocket Ativas
+const clients = new Set();
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -47,19 +126,17 @@ const MIME_TYPES = {
 };
 
 /**
- * Trata requisições HTTP servindo os arquivos estáticos da aplicação
+ * Servidor HTTP de Arquivos Estáticos e API REST
  */
 const server = http.createServer((req, res) => {
-  // Rota de API para consultar estado atual via HTTP REST
+  checkDailyReset();
+
   if (req.url === '/api/state' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(appState));
   }
 
-  // Normalização do caminho do arquivo solicitado
   let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
-  
-  // Prevenção contra Directory Traversal
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     return res.end('Acesso negado');
@@ -85,7 +162,7 @@ const server = http.createServer((req, res) => {
 });
 
 /**
- * Trata Upgrade de Conexão HTTP para protocolo WebSocket (RFC 6455)
+ * Upgrade HTTP -> WebSocket (RFC 6455)
  */
 server.on('upgrade', (req, socket, head) => {
   const secWsKey = req.headers['sec-websocket-key'];
@@ -94,7 +171,6 @@ server.on('upgrade', (req, socket, head) => {
     return;
   }
 
-  // Geração da chave WebSocket Sec-WebSocket-Accept
   const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
   const acceptKey = crypto
     .createHash('sha1')
@@ -109,86 +185,149 @@ server.on('upgrade', (req, socket, head) => {
   ];
 
   socket.write(headers.join('\r\n') + '\r\n\r\n');
-
-  // Adiciona a socket aos clientes ativos
   clients.add(socket);
 
-  // Envia o estado inicial para o novo cliente conectado
+  // Envia estado inicial
   sendWebSocketFrame(socket, JSON.stringify({ type: 'INIT_STATE', payload: appState }));
 
   socket.on('data', (buffer) => {
     try {
       const message = parseWebSocketFrame(buffer);
-      if (message) {
-        handleClientMessage(socket, message);
-      }
-    } catch (e) {
-      // Ignora frames malformados ou fechamentos
-    }
+      if (message) handleClientMessage(socket, message);
+    } catch (e) {}
   });
 
-  socket.on('close', () => {
-    clients.delete(socket);
-  });
-
-  socket.on('error', () => {
-    clients.delete(socket);
-  });
+  socket.on('close', () => clients.delete(socket));
+  socket.on('error', () => clients.delete(socket));
 });
 
 /**
- * Processa mensagens recebidas dos clientes WebSocket
+ * Processador de Comandos WebSocket
  */
 function handleClientMessage(senderSocket, message) {
   try {
     const data = JSON.parse(message);
+    checkDailyReset();
 
     switch (data.type) {
-      case 'CALL_TICKET':
+      // 1. Emissão de nova senha na Recepção
+      case 'ISSUE_TICKET': {
+        const { type, destination } = data.payload; // type = 'NORMAL' | 'PRIORIDADE'
+        let newTicketId = '';
+
+        if (type === 'PRIORIDADE') {
+          appState.senhaPrioridadedCount += 1;
+          newTicketId = 'P' + String(appState.senhaPrioridadedCount).padStart(3, '0');
+        } else {
+          appState.senhaNormalCount += 1;
+          newTicketId = String(appState.senhaNormalCount).padStart(4, '0');
+        }
+
+        const ticketObj = {
+          id: newTicketId,
+          type: type || 'NORMAL',
+          destination: destination || 'Geral',
+          createdAt: new Date().toISOString()
+        };
+
+        appState.queue.push(ticketObj);
+        saveStateToDisk();
+
+        broadcastMessage({ type: 'TICKET_ISSUED', payload: { newTicket: ticketObj, state: appState } });
+        break;
+      }
+
+      // 2. Chamada de senha pelo Consultório ou Recepção
+      case 'CALL_NEXT': {
+        const { destination, specificTicketId } = data.payload || {};
+        let ticketToCall = null;
+
+        if (specificTicketId) {
+          // Chamada de uma senha específica escolhida na lista
+          const index = appState.queue.findIndex(t => t.id === specificTicketId);
+          if (index !== -1) {
+            ticketToCall = appState.queue.splice(index, 1)[0];
+          }
+        } else if (destination && destination !== 'Geral') {
+          // Tenta pegar primeiro da prioridade para o consultório, depois normal do consultório, depois prioridade geral
+          let index = appState.queue.findIndex(t => t.destination === destination && t.type === 'PRIORIDADE');
+          if (index === -1) index = appState.queue.findIndex(t => t.destination === destination);
+          if (index === -1) index = appState.queue.findIndex(t => t.type === 'PRIORIDADE');
+          if (index === -1 && appState.queue.length > 0) index = 0;
+
+          if (index !== -1) {
+            ticketToCall = appState.queue.splice(index, 1)[0];
+          }
+        } else {
+          // Chamada sequencial padrão (Primeiro Prioridade, depois Normal)
+          let index = appState.queue.findIndex(t => t.type === 'PRIORIDADE');
+          if (index === -1 && appState.queue.length > 0) index = 0;
+
+          if (index !== -1) {
+            ticketToCall = appState.queue.splice(index, 1)[0];
+          }
+        }
+
+        if (ticketToCall) {
+          if (appState.senhaAtualText && appState.senhaAtualText !== '0000') {
+            appState.ultimaSenhaText = appState.senhaAtualText;
+          }
+
+          appState.senhaAtualText = ticketToCall.id;
+          appState.guicheAtual = destination || ticketToCall.destination || 'Recepção';
+          appState.tipoAtendimento = ticketToCall.type === 'PRIORIDADE' ? 'Atendimento Prioritário' : 'Atendimento Normal';
+
+          if (!appState.historico.includes(ticketToCall.id)) {
+            appState.historico.unshift(ticketToCall.id);
+            if (appState.historico.length > 5) appState.historico.pop();
+          }
+
+          saveStateToDisk();
+          broadcastMessage({ type: 'TICKET_CALLED', payload: appState });
+        } else {
+          // Se não houver fila, re-chamada ou notificação
+          broadcastMessage({ type: 'QUEUE_EMPTY', payload: appState });
+        }
+        break;
+      }
+
+      // 3. Incremento / Chamada Direta Simples (Modo Legado / Manual)
+      case 'CALL_TICKET': {
         appState = { ...appState, ...data.payload };
+        saveStateToDisk();
         broadcastMessage({ type: 'TICKET_CALLED', payload: appState });
         break;
+      }
 
-      case 'REPEAT_CALL':
+      // 4. Repetir Chamada Atual
+      case 'REPEAT_CALL': {
         broadcastMessage({ type: 'TICKET_REPEATED', payload: appState });
         break;
+      }
 
-      case 'RESET_TICKETS':
-        appState = {
-          senhaNormal: 0,
-          senhaPrioridade: 0,
-          senhaAtualText: '0000',
-          ultimaSenhaText: '0000',
-          guicheAtual: 'Guichê 01',
-          tipoAtendimento: 'Aguardando Chamada',
-          historico: []
-        };
+      // 5. Reset Manual
+      case 'RESET_TICKETS': {
+        appState = createInitialState();
+        saveStateToDisk();
         broadcastMessage({ type: 'TICKETS_RESET', payload: appState });
         break;
+      }
 
       default:
         break;
     }
   } catch (err) {
-    console.error('[Server Error]: Falha ao processar mensagem WS:', err);
+    console.error('[Server Error]: Falha ao processar comando:', err);
   }
 }
 
-/**
- * Transmite uma mensagem para todos os clientes WebSocket conectados
- */
 function broadcastMessage(data) {
   const jsonString = JSON.stringify(data);
   for (const client of clients) {
-    if (client.writable) {
-      sendWebSocketFrame(client, jsonString);
-    }
+    if (client.writable) sendWebSocketFrame(client, jsonString);
   }
 }
 
-/**
- * Auxiliar: Codifica e envia um Frame WebSocket de Texto (Opcode 0x1)
- */
 function sendWebSocketFrame(socket, text) {
   const payload = Buffer.from(text, 'utf-8');
   const length = payload.length;
@@ -196,7 +335,7 @@ function sendWebSocketFrame(socket, text) {
   let header;
   if (length <= 125) {
     header = Buffer.alloc(2);
-    header[0] = 0x81; // FIN = 1, Opcode = 1 (text)
+    header[0] = 0x81;
     header[1] = length;
   } else if (length <= 65535) {
     header = Buffer.alloc(4);
@@ -213,12 +352,8 @@ function sendWebSocketFrame(socket, text) {
   socket.write(Buffer.concat([header, payload]));
 }
 
-/**
- * Auxiliar: Decodifica um Frame WebSocket vindo do Cliente
- */
 function parseWebSocketFrame(buffer) {
   if (buffer.length < 2) return null;
-
   const secondByte = buffer[1];
   const isMasked = (secondByte & 0x80) !== 0;
   let payloadLength = secondByte & 0x7f;
@@ -232,7 +367,7 @@ function parseWebSocketFrame(buffer) {
     offset = 10;
   }
 
-  if (!isMasked) return null; // Clientes conforme especificação devem mascarar mensagens
+  if (!isMasked) return null;
 
   const maskingKey = buffer.slice(offset, offset + 4);
   offset += 4;
@@ -247,12 +382,12 @@ function parseWebSocketFrame(buffer) {
   return unmasked.toString('utf-8');
 }
 
-// Inicialização do Servidor
 server.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🚀 SERVIDOR CHAMA SENHA EXECUTANDO COM SUCESSO!`);
   console.log(`====================================================`);
-  console.log(`📍 Painel do Operador: http://localhost:${PORT}/index.html`);
-  console.log(`📺 Exibição para TV:   http://localhost:${PORT}/tv.html`);
+  console.log(`📍 Recepção / Triagem:   http://localhost:${PORT}/index.html`);
+  console.log(`👨‍⚕️ Painel do Consultório: http://localhost:${PORT}/atendimento.html`);
+  console.log(`📺 Exibição para TV:     http://localhost:${PORT}/tv.html`);
   console.log(`====================================================`);
 });

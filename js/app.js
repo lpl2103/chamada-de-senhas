@@ -1,43 +1,54 @@
 /**
  * ============================================================================
- * SISTEMA CHAMA SENHA - SCRIPT DO OPERADOR (VANILLA JAVASCRIPT ES6+)
+ * SISTEMA CHAMA SENHA - SCRIPT DA RECEPÇÃO & TRIAGEM (VANILLA JAVASCRIPT ES6+)
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
- * Descrição: Script principal do Painel do Operador/Recepção (index.html).
- *            Gerencia contadores, sincronização em tempo real (WebSocket e
- *            BroadcastChannel), seleção de guichês, modal customizado de reset,
- *            repetição de chamadas e preferências de tema.
+ * Descrição: Script principal da Recepção (index.html). Gerencia a emissão
+ *            de novas senhas (triagem), atribuição a consultórios, fila de espera
+ *            em tempo real, botões de ação e sincronização (WebSocket/BroadcastChannel).
  * ============================================================================
  */
 
-/**
- * Módulo de Gestão do Estado do Atendimento
- */
 class StateManager {
   static STORAGE_KEY = 'chama_senha_state_v1';
 
   constructor() {
     const savedState = this.loadFromStorage();
-    this.senhaNormal = savedState?.senhaNormal ?? 0;
-    this.senhaPrioridade = savedState?.senhaPrioridade ?? 0;
+    this.dailyDate = savedState?.dailyDate ?? new Date().toLocaleDateString('pt-BR');
+    this.senhaNormalCount = savedState?.senhaNormalCount ?? 0;
+    this.senhaPrioridadedCount = savedState?.senhaPrioridadedCount ?? 0;
     this.senhaAtualText = savedState?.senhaAtualText ?? '0000';
     this.ultimaSenhaText = savedState?.ultimaSenhaText ?? '0000';
-    this.guicheAtual = savedState?.guicheAtual ?? 'Guichê 01';
+    this.guicheAtual = savedState?.guicheAtual ?? 'Recepção';
     this.tipoAtendimento = savedState?.tipoAtendimento ?? 'Aguardando Chamada';
+    this.queue = savedState?.queue ?? [];
     this.historico = savedState?.historico ?? [];
     this.somHabilitado = savedState?.somHabilitado ?? true;
     this.vozHabilitada = savedState?.vozHabilitada ?? true;
+
+    this.checkDailyAutoReset();
+  }
+
+  checkDailyAutoReset() {
+    const today = new Date().toLocaleDateString('pt-BR');
+    if (this.dailyDate !== today) {
+      console.log(`[ChamaSenha]: Novo dia (${today}). Resetando contadores diários...`);
+      this.dailyDate = today;
+      this.resetState();
+    }
   }
 
   saveToStorage() {
     try {
       const stateToSave = {
-        senhaNormal: this.senhaNormal,
-        senhaPrioridade: this.senhaPrioridade,
+        dailyDate: this.dailyDate,
+        senhaNormalCount: this.senhaNormalCount,
+        senhaPrioridadedCount: this.senhaPrioridadedCount,
         senhaAtualText: this.senhaAtualText,
         ultimaSenhaText: this.ultimaSenhaText,
         guicheAtual: this.guicheAtual,
         tipoAtendimento: this.tipoAtendimento,
+        queue: this.queue,
         historico: this.historico.slice(0, 5),
         somHabilitado: this.somHabilitado,
         vozHabilitada: this.vozHabilitada
@@ -58,26 +69,21 @@ class StateManager {
   }
 
   resetState() {
-    this.senhaNormal = 0;
-    this.senhaPrioridade = 0;
+    this.senhaNormalCount = 0;
+    this.senhaPrioridadedCount = 0;
     this.senhaAtualText = '0000';
     this.ultimaSenhaText = '0000';
     this.tipoAtendimento = 'Aguardando Chamada';
+    this.queue = [];
     this.historico = [];
     this.saveToStorage();
   }
 }
 
-/**
- * Função Auxiliar para formatação de zeros à esquerda
- */
 function padNumber(num, size) {
   return String(num).padStart(size, '0');
 }
 
-/**
- * Aplicação Principal do Operador
- */
 class ChamaSenhaApp {
   constructor() {
     this.state = new StateManager();
@@ -85,15 +91,19 @@ class ChamaSenhaApp {
     this.socket = null;
     this.broadcastChannel = null;
 
-    // Seleção dos elementos do DOM
+    // Elementos do DOM
     this.dom = {
       senhaAtualNumero: document.getElementById('senhaAtualNumero'),
       ultimaSenhaNumero: document.getElementById('ultimaSenhaNumero'),
       displayCard: document.getElementById('displayCard'),
       displayTypeBadge: document.getElementById('displayTypeBadge'),
       currentGuicheBadge: document.getElementById('currentGuicheBadge'),
-      guicheSelect: document.getElementById('guicheSelect'),
       historicoLista: document.getElementById('historicoLista'),
+      totalQueueCount: document.getElementById('totalQueueCount'),
+      queueListContainer: document.getElementById('queueListContainer'),
+      issueDestinationSelect: document.getElementById('issueDestinationSelect'),
+      btnIssueNormal: document.getElementById('btnIssueNormal'),
+      btnIssuePrior: document.getElementById('btnIssuePrior'),
       audioChamada: document.getElementById('audioChamada'),
       statusDot: document.getElementById('statusDot'),
       statusText: document.getElementById('statusText'),
@@ -106,8 +116,6 @@ class ChamaSenhaApp {
       btnAnteriorPrior: document.getElementById('btnAnteriorPrior'),
       btnRepetir: document.getElementById('btnRepetir'),
       btnReset: document.getElementById('btnReset'),
-
-      // Modal Customizado
       confirmResetModal: document.getElementById('confirmResetModal'),
       btnCancelReset: document.getElementById('btnCancelReset'),
       btnConfirmReset: document.getElementById('btnConfirmReset')
@@ -121,43 +129,34 @@ class ChamaSenhaApp {
     this.updateUI();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha Operador]: Painel do Operador inicializado.');
+    console.log('[ChamaSenha Recepção]: Inicializado.');
   }
 
-  /**
-   * Conecta os escutadores de eventos de botões e atalhos de teclado.
-   */
   bindEvents() {
     document.addEventListener('keydown', (e) => this.handleKeyDown(e));
 
-    // Ações do Operador
-    this.dom.btnProximaNormal?.addEventListener('click', () => this.chamarProximaNormal());
-    this.dom.btnAnteriorNormal?.addEventListener('click', () => this.voltarNormal());
-    this.dom.btnProximaPrior?.addEventListener('click', () => this.chamarProximaPrioridade());
-    this.dom.btnAnteriorPrior?.addEventListener('click', () => this.voltarPrioridade());
-    this.dom.btnRepetir?.addEventListener('click', () => this.repetirChamada());
-    
-    // Mudança de Guichê
-    this.dom.guicheSelect?.addEventListener('change', (e) => {
-      this.state.guicheAtual = e.target.value;
-      this.state.saveToStorage();
-      this.updateUI();
-    });
+    // Emissão de Senhas (Triagem)
+    this.dom.btnIssueNormal?.addEventListener('click', () => this.emitirSenha('NORMAL'));
+    this.dom.btnIssuePrior?.addEventListener('click', () => this.emitirSenha('PRIORIDADE'));
 
-    // Modal Customizado de Zerar Senhas
+    // Ações de Chamada
+    this.dom.btnProximaNormal?.addEventListener('click', () => this.chamarProxima('NORMAL'));
+    this.dom.btnProximaPrior?.addEventListener('click', () => this.chamarProxima('PRIORIDADE'));
+    this.dom.btnRepetir?.addEventListener('click', () => this.repetirChamada());
+    this.dom.btnAnteriorNormal?.addEventListener('click', () => this.voltarNormal());
+    this.dom.btnAnteriorPrior?.addEventListener('click', () => this.voltarPrioridade());
+
+    // Modal Reset
     this.dom.btnReset?.addEventListener('click', () => this.abrirModalReset());
     this.dom.btnCancelReset?.addEventListener('click', () => this.fecharModalReset());
     this.dom.btnConfirmReset?.addEventListener('click', () => this.executarReset());
 
-    // Preferências Globais
+    // Preferências
     this.dom.themeToggleBtn?.addEventListener('click', () => this.toggleTheme());
     this.dom.soundToggleBtn?.addEventListener('click', () => this.toggleSound());
     this.dom.speechToggleBtn?.addEventListener('click', () => this.toggleSpeech());
   }
 
-  /**
-   * Inicializa comunicação real-time (WebSocket principal + BroadcastChannel fallback)
-   */
   initCommunication() {
     if (window.location.protocol.startsWith('http')) {
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -173,14 +172,7 @@ class ChamaSenhaApp {
         this.socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.type === 'INIT_STATE') {
-              this.state.senhaNormal = data.payload.senhaNormal ?? this.state.senhaNormal;
-              this.state.senhaPrioridade = data.payload.senhaPrioridade ?? this.state.senhaPrioridade;
-              this.state.senhaAtualText = data.payload.senhaAtualText ?? this.state.senhaAtualText;
-              this.state.ultimaSenhaText = data.payload.ultimaSenhaText ?? this.state.ultimaSenhaText;
-              this.state.historico = data.payload.historico ?? this.state.historico;
-              this.updateUI();
-            }
+            this.handleIncomingMessage(data);
           } catch (e) {}
         };
 
@@ -204,155 +196,142 @@ class ChamaSenhaApp {
   setupFallbackChannel() {
     if ('BroadcastChannel' in window && !this.broadcastChannel) {
       this.broadcastChannel = new BroadcastChannel('chama_senha_channel');
+      this.broadcastChannel.onmessage = (event) => {
+        this.handleIncomingMessage(event.data);
+      };
       this.updateConnectionStatus(true, 'Modo Local (BroadcastChannel)');
     }
   }
 
-  /**
-   * Envia atualização para todas as telas (TVs e Operadores)
-   */
-  broadcastEvent(eventType, payloadData) {
-    // 1. Envia por WebSocket se disponível
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ type: eventType, payload: payloadData }));
-    }
+  handleIncomingMessage(data) {
+    if (!data) return;
 
-    // 2. Envia por BroadcastChannel fallback
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({ type: eventType, payload: payloadData });
-    }
-  }
-
-  /**
-   * Atalhos de Teclado
-   */
-  handleKeyDown(e) {
-    // Fecha modal se ESC for pressionado
-    if (e.key === 'Escape' && this.dom.confirmResetModal?.classList.contains('active')) {
-      this.fecharModalReset();
-      return;
-    }
-
-    // Ignora se estiver num input
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-      return;
-    }
-
-    switch (e.code) {
-      case 'ArrowRight':
-        e.preventDefault();
-        this.chamarProximaNormal();
+    switch (data.type) {
+      case 'INIT_STATE':
+      case 'TICKET_ISSUED':
+      case 'TICKET_CALLED':
+      case 'TICKETS_RESET': {
+        const payload = data.payload?.state || data.payload;
+        if (payload) {
+          this.state.senhaNormalCount = payload.senhaNormalCount ?? this.state.senhaNormalCount;
+          this.state.senhaPrioridadedCount = payload.senhaPrioridadedCount ?? this.state.senhaPrioridadedCount;
+          this.state.senhaAtualText = payload.senhaAtualText ?? this.state.senhaAtualText;
+          this.state.ultimaSenhaText = payload.ultimaSenhaText ?? this.state.ultimaSenhaText;
+          this.state.guicheAtual = payload.guicheAtual ?? this.state.guicheAtual;
+          this.state.tipoAtendimento = payload.tipoAtendimento ?? this.state.tipoAtendimento;
+          this.state.queue = payload.queue ?? this.state.queue;
+          this.state.historico = payload.historico ?? this.state.historico;
+          this.state.saveToStorage();
+          this.updateUI();
+        }
         break;
-
-      case 'ArrowUp':
-        e.preventDefault();
-        this.chamarProximaPrioridade();
-        break;
-
-      case 'KeyR':
-        e.preventDefault();
-        this.repetirChamada();
-        break;
-
-      case 'KeyA':
-        e.preventDefault();
-        this.voltarNormal();
-        break;
-
-      case 'KeyS':
-        e.preventDefault();
-        this.voltarPrioridade();
-        break;
-
+      }
       default:
         break;
     }
   }
 
-  chamarProximaNormal() {
-    this.registrarUltimaSenha();
-    this.state.senhaNormal += 1;
-    const novaSenhaStr = padNumber(this.state.senhaNormal, 4);
-    
-    this.state.senhaAtualText = novaSenhaStr;
-    this.state.tipoAtendimento = 'Atendimento Normal';
-    this.notificarChamada('CALL_TICKET');
-  }
-
-  chamarProximaPrioridade() {
-    this.registrarUltimaSenha();
-    this.state.senhaPrioridade += 1;
-    const novaSenhaStr = 'P' + padNumber(this.state.senhaPrioridade, 3);
-    
-    this.state.senhaAtualText = novaSenhaStr;
-    this.state.tipoAtendimento = 'Atendimento Prioritário';
-    this.notificarChamada('CALL_TICKET');
-  }
-
-  repetirChamada() {
-    if (this.state.senhaAtualText && this.state.senhaAtualText !== '0000') {
-      this.notificarChamada('REPEAT_CALL');
+  sendEvent(eventType, payloadData) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type: eventType, payload: payloadData }));
+    }
+    if (this.broadcastChannel) {
+      this.broadcastChannel.postMessage({ type: eventType, payload: payloadData });
     }
   }
 
-  voltarNormal() {
-    if (this.state.senhaNormal > 0) {
-      this.state.senhaNormal -= 1;
-      const novaSenhaStr = padNumber(this.state.senhaNormal, 4);
-      this.state.senhaAtualText = novaSenhaStr;
+  emitirSenha(tipo) {
+    const destination = this.dom.issueDestinationSelect?.value || 'Geral';
+    this.sendEvent('ISSUE_TICKET', { type: tipo, destination });
+
+    // Fallback local se estiver sem backend
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      let id = '';
+      if (tipo === 'PRIORIDADE') {
+        this.state.senhaPrioridadedCount += 1;
+        id = 'P' + padNumber(this.state.senhaPrioridadedCount, 3);
+      } else {
+        this.state.senhaNormalCount += 1;
+        id = padNumber(this.state.senhaNormalCount, 4);
+      }
+
+      const tObj = { id, type: tipo, destination, createdAt: new Date().toISOString() };
+      this.state.queue.push(tObj);
       this.state.saveToStorage();
       this.updateUI();
-      this.broadcastEvent('CALL_TICKET', this.getCurrentPayload());
     }
   }
 
-  voltarPrioridade() {
-    if (this.state.senhaPrioridade > 0) {
-      this.state.senhaPrioridade -= 1;
-      const novaSenhaStr = 'P' + padNumber(this.state.senhaPrioridade, 3);
-      this.state.senhaAtualText = novaSenhaStr;
-      this.state.saveToStorage();
-      this.updateUI();
-      this.broadcastEvent('CALL_TICKET', this.getCurrentPayload());
-    }
-  }
+  chamarProxima(preferredType = '') {
+    this.sendEvent('CALL_NEXT', { destination: 'Recepção', preferredType });
 
-  registrarUltimaSenha() {
-    if (this.state.senhaAtualText && this.state.senhaAtualText !== '0000') {
-      this.state.ultimaSenhaText = this.state.senhaAtualText;
-      if (this.state.historico[0] !== this.state.senhaAtualText) {
-        this.state.historico.unshift(this.state.senhaAtualText);
-        if (this.state.historico.length > 5) this.state.historico.pop();
+    // Fallback local sem backend
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      let index = -1;
+      if (preferredType === 'PRIORIDADE') {
+        index = this.state.queue.findIndex(t => t.type === 'PRIORIDADE');
+      }
+      if (index === -1 && this.state.queue.length > 0) index = 0;
+
+      if (index !== -1) {
+        const ticket = this.state.queue.splice(index, 1)[0];
+        if (this.state.senhaAtualText && this.state.senhaAtualText !== '0000') {
+          this.state.ultimaSenhaText = this.state.senhaAtualText;
+        }
+
+        this.state.senhaAtualText = ticket.id;
+        this.state.guicheAtual = 'Recepção';
+        this.state.tipoAtendimento = ticket.type === 'PRIORIDADE' ? 'Atendimento Prioritário' : 'Atendimento Normal';
+
+        if (!this.state.historico.includes(ticket.id)) {
+          this.state.historico.unshift(ticket.id);
+          if (this.state.historico.length > 5) this.state.historico.pop();
+        }
+
+        this.state.saveToStorage();
+        this.updateUI();
+        this.notificarLocal();
       }
     }
   }
 
-  getCurrentPayload() {
-    return {
-      senhaNormal: this.state.senhaNormal,
-      senhaPrioridade: this.state.senhaPrioridade,
-      senhaAtualText: this.state.senhaAtualText,
-      ultimaSenhaText: this.state.ultimaSenhaText,
-      guicheAtual: this.state.guicheAtual,
-      tipoAtendimento: this.state.tipoAtendimento,
-      historico: this.state.historico
-    };
+  chamarSenhaEspecifica(ticketId) {
+    this.sendEvent('CALL_NEXT', { destination: 'Recepção', specificTicketId: ticketId });
   }
 
-  notificarChamada(eventType) {
-    this.updateUI();
-    this.state.saveToStorage();
+  repetirChamada() {
+    if (this.state.senhaAtualText && this.state.senhaAtualText !== '0000') {
+      this.sendEvent('REPEAT_CALL', { state: this.state });
+      this.notificarLocal();
+    }
+  }
 
-    const payload = this.getCurrentPayload();
-    this.broadcastEvent(eventType, payload);
+  voltarNormal() {
+    if (this.state.senhaNormalCount > 0) {
+      this.state.senhaNormalCount -= 1;
+      this.state.senhaAtualText = padNumber(this.state.senhaNormalCount, 4);
+      this.state.saveToStorage();
+      this.updateUI();
+      this.sendEvent('CALL_TICKET', this.state);
+    }
+  }
 
-    // Efeito local no operador
+  voltarPrioridade() {
+    if (this.state.senhaPrioridadedCount > 0) {
+      this.state.senhaPrioridadedCount -= 1;
+      this.state.senhaAtualText = 'P' + padNumber(this.state.senhaPrioridadedCount, 3);
+      this.state.saveToStorage();
+      this.updateUI();
+      this.sendEvent('CALL_TICKET', this.state);
+    }
+  }
+
+  notificarLocal() {
     if (this.dom.displayCard) {
       this.dom.displayCard.classList.remove('calling');
       void this.dom.displayCard.offsetWidth;
       this.dom.displayCard.classList.add('calling');
     }
-
     if (this.state.somHabilitado) this.tocarGingle();
     if (this.state.vozHabilitada) setTimeout(() => this.anunciarVoz(this.state.senhaAtualText, this.state.guicheAtual), 700);
   }
@@ -388,7 +367,6 @@ class ChamaSenhaApp {
     if (this.dom.senhaAtualNumero) this.dom.senhaAtualNumero.textContent = this.state.senhaAtualText;
     if (this.dom.ultimaSenhaNumero) this.dom.ultimaSenhaNumero.textContent = this.state.ultimaSenhaText;
     if (this.dom.currentGuicheBadge) this.dom.currentGuicheBadge.textContent = this.state.guicheAtual;
-    if (this.dom.guicheSelect) this.dom.guicheSelect.value = this.state.guicheAtual;
 
     if (this.dom.displayTypeBadge) {
       if (this.state.senhaAtualText.startsWith('P')) {
@@ -403,6 +381,27 @@ class ChamaSenhaApp {
       }
     }
 
+    // Atualiza Fila de Espera
+    const queue = this.state.queue || [];
+    if (this.dom.totalQueueCount) this.dom.totalQueueCount.textContent = queue.length;
+
+    if (this.dom.queueListContainer) {
+      this.dom.queueListContainer.innerHTML = '';
+      if (queue.length === 0) {
+        this.dom.queueListContainer.innerHTML = '<p class="queue-empty-text">Nenhum paciente aguardando na fila.</p>';
+      } else {
+        queue.forEach((t) => {
+          const pill = document.createElement('button');
+          pill.className = `queue-item-pill ${t.type === 'PRIORIDADE' ? 'prioridade' : ''}`;
+          pill.title = `Clique para chamar ${t.id} agora`;
+          pill.innerHTML = `<strong>${t.id}</strong> <span>(${t.destination})</span>`;
+          pill.addEventListener('click', () => this.chamarSenhaEspecifica(t.id));
+          this.dom.queueListContainer.appendChild(pill);
+        });
+      }
+    }
+
+    // Histórico
     if (this.dom.historicoLista) {
       this.dom.historicoLista.innerHTML = '';
       if (this.state.historico.length === 0) {
@@ -422,41 +421,56 @@ class ChamaSenhaApp {
     }
   }
 
-  // Modal Customizado
-  abrirModalReset() {
-    if (this.dom.confirmResetModal) {
-      this.dom.confirmResetModal.classList.add('active');
+  handleKeyDown(e) {
+    if (e.key === 'Escape' && this.dom.confirmResetModal?.classList.contains('active')) {
+      this.fecharModalReset();
+      return;
+    }
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+    if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      this.chamarProxima('NORMAL');
+    } else if (e.code === 'ArrowUp') {
+      e.preventDefault();
+      this.chamarProxima('PRIORIDADE');
+    } else if (e.code === 'KeyR') {
+      e.preventDefault();
+      this.repetirChamada();
+    } else if (e.code === 'KeyA') {
+      e.preventDefault();
+      this.voltarNormal();
+    } else if (e.code === 'KeyS') {
+      e.preventDefault();
+      this.voltarPrioridade();
     }
   }
 
+  abrirModalReset() {
+    this.dom.confirmResetModal?.classList.add('active');
+  }
+
   fecharModalReset() {
-    if (this.dom.confirmResetModal) {
-      this.dom.confirmResetModal.classList.remove('active');
-    }
+    this.dom.confirmResetModal?.classList.remove('active');
   }
 
   executarReset() {
     this.fecharModalReset();
     this.state.resetState();
     this.updateUI();
-    this.broadcastEvent('RESET_TICKETS', this.getCurrentPayload());
-    console.log('[ChamaSenha]: Contadores zerados pelo operador.');
+    this.sendEvent('RESET_TICKETS', {});
   }
 
-  // Alternância do Tema Escuro / Claro
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('chama_senha_theme', newTheme);
   }
 
   initTheme() {
     const savedTheme = localStorage.getItem('chama_senha_theme');
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
   }
 
   toggleSound() {

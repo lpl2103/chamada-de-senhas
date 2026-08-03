@@ -1,8 +1,8 @@
 /* ==========================================================================
    SISTEMA CHAMA SENHA - STYLESHEET COMPLETO (CSS3 PURÍSSIMO)
    ==========================================================================
-   Suporte a: Multi-Telas (TV & Operador), Modais Customizados, Temas Escuro/Claro,
-   Animações Nativas, Layouts Responsivos (Flexbox & Grid) e Acessibilidade.
+   Suporte a: Multi-Telas (TV, Consultórios & Recepção), Triagem de Fila,
+   Modais Customizados, Temas Escuro/Claro, Layout 2-Colunas e Responsividade.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -93,7 +93,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Link de salto de acessibilidade */
 .skip-link {
   position: absolute;
   top: -100px;
@@ -129,12 +128,12 @@ body {
 .app-header {
   background-color: var(--surface-color);
   border-bottom: 3px solid var(--primary-color);
-  padding: 1rem 2rem;
+  padding: 0.75rem 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .header-container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -146,23 +145,23 @@ body {
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .brand-logo {
-  height: 50px;
+  height: 42px;
   width: auto;
   object-fit: contain;
 }
 
 .brand-title {
-  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
   font-weight: 800;
   color: var(--primary-color);
 }
 
 .brand-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -170,299 +169,307 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.icon-btn, .link-tv-btn {
+.icon-btn, .link-tv-btn, .link-doctor-btn {
   background: var(--bg-color);
   border: 1px solid var(--surface-border);
   color: var(--text-main);
-  padding: 0.55rem 0.85rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-decoration: none;
   transition: all var(--transition-fast);
 }
 
-.icon-btn:hover, .link-tv-btn:hover {
+.icon-btn:hover, .link-tv-btn:hover, .link-doctor-btn:hover {
   background: var(--primary-light);
   color: var(--primary-color);
   border-color: var(--primary-color);
-  transform: translateY(-1px);
-}
-
-.icon-btn:focus-visible, .link-tv-btn:focus-visible {
-  outline: 3px solid var(--accent-color);
-  outline-offset: 2px;
 }
 
 /* --------------------------------------------------------------------------
-   4. CONTEÚDO PRINCIPAL & CARDS
+   4. LAYOUT ADMINISTRATIVO EM 2 COLUNAS (LADO A LADO - SEM SCROLL)
    -------------------------------------------------------------------------- */
-.main-container {
-  max-width: 1400px;
+.admin-container {
+  max-width: 1600px;
   width: 100%;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  flex: 1;
 }
 
-/* Seletor do Guichê */
-.guiche-selector-card {
+.admin-two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .admin-two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-col-left, .admin-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Display Card Compacto no Operador */
+.admin-display-card {
+  padding: 1.5rem 1rem;
+}
+
+.admin-display-number {
+  font-size: clamp(3.5rem, 8vw, 6rem);
+}
+
+/* Card de Emissão de Senhas (Triagem) */
+.issue-ticket-card {
+  padding: 1.25rem;
+  text-align: left;
+}
+
+.issue-controls-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.issue-destination-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.issue-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.issue-select {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--primary-color);
+  background: var(--surface-color);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.issue-buttons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.btn-issue {
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-issue:active { transform: scale(0.97); }
+
+.btn-issue-normal { background: #2563eb; }
+.btn-issue-normal:hover { background: #1d4ed8; }
+
+.btn-issue-prior { background: #d97706; }
+.btn-issue-prior:hover { background: #b45309; }
+
+/* Fila de Espera na Recepção */
+.queue-summary-card {
+  padding: 1.25rem;
+}
+
+.queue-summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.guiche-input-group {
+.queue-sub-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.queue-list-container {
+  margin-top: 0.75rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
   flex-wrap: wrap;
-}
-
-.guiche-label {
-  font-weight: 700;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
   gap: 0.5rem;
-  color: var(--text-main);
+  max-height: 140px;
+  overflow-y: auto;
 }
 
-.guiche-select {
-  padding: 0.6rem 1.25rem;
-  border-radius: 0.5rem;
-  border: 2px solid var(--primary-color);
-  background-color: var(--surface-color);
-  color: var(--text-main);
-  font-size: 1.05rem;
-  font-weight: 700;
-  cursor: pointer;
-  outline: none;
-  transition: border-color var(--transition-fast);
+.queue-empty-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
-.guiche-select:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
-}
-
-/* Card Principal da Senha */
-.display-card {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
-  color: var(--text-inverse);
-  border-radius: 1.25rem;
-  padding: 2.5rem 1.5rem;
-  text-align: center;
-  box-shadow: var(--card-shadow);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-.display-card.calling {
-  animation: pulseGlow 0.8s ease-in-out 2;
-}
-
-@keyframes pulseGlow {
-  0% { transform: scale(1); box-shadow: var(--card-shadow); }
-  50% { transform: scale(1.02); box-shadow: var(--active-glow); }
-  100% { transform: scale(1); box-shadow: var(--card-shadow); }
-}
-
-.card-top-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.display-label {
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  opacity: 0.9;
-  text-transform: uppercase;
-}
-
-.guiche-badge-pill {
-  background: var(--accent-color);
-  color: #ffffff;
-  padding: 0.3rem 1rem;
+.queue-item-pill {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.35rem 0.75rem;
   border-radius: 2rem;
   font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  cursor: pointer;
 }
 
-.display-number {
-  font-size: clamp(4.5rem, 14vw, 10rem);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+.queue-item-pill.prioridade {
+  background: var(--accent-light);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
 }
 
-.display-type-badge {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.4rem 1.5rem;
-  border-radius: 2rem;
-  font-weight: 700;
-  font-size: 1.1rem;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
+/* Painel de Controles do Operador */
+.admin-controls-panel {
+  padding: 1.25rem;
 }
 
-.display-type-badge.prioridade {
-  background: var(--accent-color);
-  color: #ffffff;
-}
-
-/* Secondary Grid & Cards */
-.secondary-grid {
+.admin-controls-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   5. PAINEL DO CONSULTÓRIO DO MÉDICO (atendimento.html)
+   -------------------------------------------------------------------------- */
+.doctor-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
-.secondary-card {
-  background: var(--surface-color);
-  border: 1px solid var(--surface-border);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.card-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--accent-color);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-.card-number {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 800;
-  color: var(--text-main);
-  font-variant-numeric: tabular-nums;
-}
-
-.history-list {
+.doctor-room-card {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-  list-style: none;
-}
-
-.history-item {
-  background: var(--history-bg);
-  color: var(--text-main);
-  padding: 0.4rem 0.8rem;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 1.1rem;
-  font-variant-numeric: tabular-nums;
-}
-
-/* --------------------------------------------------------------------------
-   5. PAINEL DE CONTROLE DE BOTÕES (OPERADOR)
-   -------------------------------------------------------------------------- */
-.controls-section {
-  background: var(--surface-color);
-  border: 1px solid var(--surface-border);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.controls-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.controls-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  padding: 1.25rem 1.75rem;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
-.btn-control {
-  padding: 1rem 1.25rem;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-  cursor: pointer;
+.doctor-room-group {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  transition: all var(--transition-fast);
-  color: #ffffff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  gap: 1rem;
 }
 
-.btn-control:active { transform: scale(0.97); }
-.btn-control:focus-visible { outline: 3px solid var(--accent-color); outline-offset: 2px; }
-
-.btn-normal-next { background: #2563eb; }
-.btn-normal-next:hover { background: #1d4ed8; }
-
-.btn-prior-next { background: #d97706; }
-.btn-prior-next:hover { background: #b45309; }
-
-.btn-repeat { background: #059669; }
-.btn-repeat:hover { background: #047857; }
-
-.btn-normal-prev { background: #64748b; }
-.btn-normal-prev:hover { background: #475569; }
-
-.btn-prior-prev { background: #78350f; }
-.btn-prior-prev:hover { background: #451a03; }
-
-.btn-reset { background: #dc2626; }
-.btn-reset:hover { background: #b91c1c; }
-
-.btn-shortcut-hint {
-  font-size: 0.75rem;
-  opacity: 0.85;
-  font-weight: 500;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.25rem;
+.doctor-room-label {
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
+.doctor-room-select {
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--primary-color);
+  background: var(--surface-color);
+  color: var(--text-main);
+  font-weight: 800;
+  font-size: 1.1rem;
+  outline: none;
+}
+
+.room-stats-badge {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  padding: 0.5rem 1.25rem;
+  border-radius: 2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.queue-count-number {
+  font-size: 1.3rem;
+  color: var(--accent-color);
+}
+
+.doctor-display-card {
+  padding: 3rem 2rem;
+}
+
+.doctor-display-number {
+  font-size: clamp(5rem, 16vw, 11rem);
+}
+
+.doctor-controls-section {
+  padding: 1.5rem;
+}
+
+.doctor-action-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .doctor-action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-doctor-call {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 1.75rem 1.5rem;
+  font-size: 1.25rem;
+  letter-spacing: 0.03em;
+}
+
+.btn-doctor-call:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-doctor-repeat {
+  background: #2563eb;
+  padding: 1.75rem 1.5rem;
+  font-size: 1.1rem;
+}
+.btn-doctor-repeat:hover { background: #1d4ed8; }
 
 /* --------------------------------------------------------------------------
-   6. MODAL CUSTOMIZADO DE CONFIRMAÇÃO
+   6. MODAL CUSTOMIZADO
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
@@ -498,9 +505,7 @@ body {
   transition: transform var(--transition-normal);
 }
 
-.modal-overlay.active .modal-card {
-  transform: translateY(0);
-}
+.modal-overlay.active .modal-card { transform: translateY(0); }
 
 .modal-header {
   display: flex;
@@ -509,24 +514,9 @@ body {
   margin-bottom: 1rem;
 }
 
-.modal-title {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text-main);
-}
-
-.modal-description {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-}
+.modal-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+.modal-description { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6; }
+.modal-actions { display: flex; gap: 1rem; justify-content: flex-end; }
 
 .btn-modal {
   padding: 0.75rem 1.25rem;
@@ -538,20 +528,14 @@ body {
   transition: background-color var(--transition-fast);
 }
 
-.btn-modal-cancel {
-  background: var(--history-bg);
-  color: var(--text-main);
-}
+.btn-modal-cancel { background: var(--history-bg); color: var(--text-main); }
 .btn-modal-cancel:hover { background: var(--surface-border); }
 
-.btn-modal-confirm {
-  background: #dc2626;
-  color: #ffffff;
-}
+.btn-modal-confirm { background: #dc2626; color: #ffffff; }
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   7. ESTILOS OTIMIZADOS PARA TELA DE TV (100% CABE NA VIEWPORT / SEM SCROLL)
+   7. ESTILOS DA TELA DE TV (tv.html)
    -------------------------------------------------------------------------- */
 html.tv-mode, body.tv-mode {
   height: 100vh;
@@ -570,11 +554,7 @@ html.tv-mode, body.tv-mode {
   justify-content: flex-end;
 }
 
-.tv-header-content {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
+.tv-header-content { display: flex; justify-content: flex-end; width: 100%; }
 
 .clock-display {
   display: flex;
@@ -583,18 +563,8 @@ html.tv-mode, body.tv-mode {
   font-variant-numeric: tabular-nums;
 }
 
-.clock-time {
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-  font-weight: 900;
-  color: var(--primary-color);
-  line-height: 1;
-}
-
-.clock-date {
-  font-size: clamp(0.75rem, 1.2vw, 1rem);
-  color: var(--text-muted);
-  text-transform: capitalize;
-}
+.clock-time { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 900; color: var(--primary-color); line-height: 1; }
+.clock-date { font-size: clamp(0.75rem, 1.2vw, 1rem); color: var(--text-muted); text-transform: capitalize; }
 
 .tv-container {
   max-width: 1800px;
@@ -605,10 +575,9 @@ html.tv-mode, body.tv-mode {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 0; /* Previne estouro flexbox */
+  min-height: 0;
 }
 
-/* Card Principal de Exibição na TV */
 .tv-display-card {
   flex: 1;
   min-height: 0;
@@ -620,12 +589,7 @@ html.tv-mode, body.tv-mode {
   gap: 0.75rem;
 }
 
-.tv-card-header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
+.tv-card-header { display: flex; align-items: center; gap: 1.5rem; }
 .tv-guiche-badge {
   background: #ffffff;
   color: var(--primary-color);
@@ -636,69 +600,34 @@ html.tv-mode, body.tv-mode {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.tv-display-number {
-  font-size: clamp(5.5rem, 18vw, 14rem);
-  line-height: 0.9;
-}
+.tv-display-number { font-size: clamp(5.5rem, 18vw, 14rem); line-height: 0.9; }
+.tv-type-badge { font-size: clamp(1.1rem, 2vw, 1.75rem); padding: 0.4rem 2rem; margin-top: 0.5rem; }
 
-.tv-type-badge {
-  font-size: clamp(1.1rem, 2vw, 1.75rem);
-  padding: 0.4rem 2rem;
-  margin-top: 0.5rem;
-}
+.tv-history-card { padding: 1rem 1.5rem; flex-shrink: 0; }
+.tv-history-title { font-size: 0.9rem; margin-bottom: 0.3rem; }
+.tv-history-list .history-item { font-size: clamp(1rem, 1.8vw, 1.4rem); padding: 0.35rem 1rem; }
 
-/* Card Inferior do Histórico */
-.tv-history-card {
-  padding: 1rem 1.5rem;
-  flex-shrink: 0; /* Garante que não diminua excessivamente */
-}
+.tv-footer { padding: 0.5rem 2rem; flex-shrink: 0; }
 
-.tv-history-title {
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
-}
-
-.tv-history-list .history-item {
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
-  padding: 0.35rem 1rem;
-}
-
-.tv-footer {
-  padding: 0.5rem 2rem;
-  flex-shrink: 0;
-}
-
-/* Indicador de Status */
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
+.status-indicator { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
 .status-dot.online { background: #10b981; box-shadow: 0 0 8px #10b981; }
 .status-dot.offline { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
 /* --------------------------------------------------------------------------
-   8. RODAPÉ (GERAL)
+   8. RODAPÉ
    -------------------------------------------------------------------------- */
 .app-footer {
   background-color: var(--surface-color);
   border-top: 1px solid var(--surface-border);
-  padding: 0.85rem 2rem;
+  padding: 0.75rem 2rem;
   text-align: center;
   font-size: 0.85rem;
   color: var(--text-muted);
 }
 
 .footer-content {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -707,12 +636,7 @@ html.tv-mode, body.tv-mode {
   gap: 1rem;
 }
 
-.shortcuts-legend {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
+.shortcuts-legend { display: flex; gap: 1rem; flex-wrap: wrap; }
 .shortcut-tag { display: inline-flex; align-items: center; gap: 0.3rem; }
 
 kbd {
