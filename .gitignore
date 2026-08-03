@@ -12,3 +12,5 @@ package-lock.json
 # Logs e Dados Locais
 *.log
 data/
+*.tar.gz
+
