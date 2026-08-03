@@ -4,7 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Executa 1 sinal sonoro (gingle) e REPETE O ANÚNCIO DE VOZ 3 VEZES.
+ *            Suporte ao formato N000 e anúncio de voz em 3 repetições.
  * ============================================================================
  */
 
@@ -38,7 +38,7 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel da TV inicializado (Voz com 3 repetições).');
+    console.log('[ChamaSenha TV]: Painel da TV inicializado (Formato N000).');
   }
 
   bindEvents() {
@@ -133,7 +133,9 @@ class ChamaSenhaTV {
 
   renderState(state, triggerAlerts = false) {
     if (this.dom.senhaAtualNumero) {
-      this.dom.senhaAtualNumero.textContent = state.senhaAtualText || '0000';
+      let text = state.senhaAtualText || 'N000';
+      if (text === '0000') text = 'N000';
+      this.dom.senhaAtualNumero.textContent = text;
     }
 
     if (this.dom.guicheBadge) {
@@ -191,7 +193,7 @@ class ChamaSenhaTV {
       }
     }
 
-    if (triggerAlerts && state.senhaAtualText !== '0000') {
+    if (triggerAlerts && state.senhaAtualText && state.senhaAtualText !== 'N000' && state.senhaAtualText !== '0000') {
       this.animateCard();
       this.tocarGingle(() => {
         if (this.vozHabilitada) {
@@ -209,9 +211,6 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Toca o gingle sonoro inicial uma vez
-   */
   tocarGingle(onCompleteCallback) {
     if (!this.dom.audioChamada || !this.somHabilitado) {
       if (onCompleteCallback) onCompleteCallback();
@@ -238,9 +237,6 @@ class ChamaSenhaTV {
     }
   }
 
-  /**
-   * Anuncia a mensagem de voz e REPETE ELA 3 VEZES em sequência com pequena pausa
-   */
   anunciarVoz3Vezes(senhaStr, guicheStr, repeticoes = 3) {
     if (!this.speechSynth || !this.vozHabilitada) return;
 
@@ -252,6 +248,9 @@ class ChamaSenhaTV {
     if (senhaStr.startsWith('P')) {
       const num = senhaStr.substring(1);
       textoVoz = `Senha prioritária, P, ${num.split('').join(' ')}${guicheFormatado}`;
+    } else if (senhaStr.startsWith('N')) {
+      const num = senhaStr.substring(1);
+      textoVoz = `Senha normal, N, ${num.split('').join(' ')}${guicheFormatado}`;
     } else {
       textoVoz = `Senha, ${senhaStr.split('').join(' ')}${guicheFormatado}`;
     }
@@ -269,7 +268,7 @@ class ChamaSenhaTV {
 
       utterance.onend = () => {
         if (count < repeticoes) {
-          setTimeout(falarUmaVez, 400); // Pausa estratégica de 400ms entre toques
+          setTimeout(falarUmaVez, 400);
         }
       };
 

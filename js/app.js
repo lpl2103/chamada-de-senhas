@@ -3,7 +3,7 @@
  * SISTEMA CHAMA SENHA - SCRIPT DA RECEPÇÃO & TRIAGEM (VANILLA JAVASCRIPT ES6+)
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
- * Descrição: Script principal da Recepção (index.html). Prioridades no topo.
+ * Descrição: Script principal da Recepção (index.html). Suporte ao formato N000.
  * ============================================================================
  */
 
@@ -15,8 +15,8 @@ class StateManager {
     this.dailyDate = savedState?.dailyDate ?? new Date().toLocaleDateString('pt-BR');
     this.senhaNormalCount = savedState?.senhaNormalCount ?? 0;
     this.senhaPrioridadedCount = savedState?.senhaPrioridadedCount ?? 0;
-    this.senhaAtualText = savedState?.senhaAtualText ?? '0000';
-    this.ultimaSenhaText = savedState?.ultimaSenhaText ?? '0000';
+    this.senhaAtualText = (savedState?.senhaAtualText && savedState.senhaAtualText !== '0000') ? savedState.senhaAtualText : 'N000';
+    this.ultimaSenhaText = (savedState?.ultimaSenhaText && savedState.ultimaSenhaText !== '0000') ? savedState.ultimaSenhaText : 'N000';
     this.guicheAtual = savedState?.guicheAtual ?? 'Recepção';
     this.tipoAtendimento = savedState?.tipoAtendimento ?? 'Aguardando Chamada';
     this.queue = savedState?.queue ?? [];
@@ -69,8 +69,8 @@ class StateManager {
   resetState() {
     this.senhaNormalCount = 0;
     this.senhaPrioridadedCount = 0;
-    this.senhaAtualText = '0000';
-    this.ultimaSenhaText = '0000';
+    this.senhaAtualText = 'N000';
+    this.ultimaSenhaText = 'N000';
     this.tipoAtendimento = 'Aguardando Chamada';
     this.queue = [];
     this.historico = [];
@@ -126,7 +126,7 @@ class ChamaSenhaApp {
     this.updateUI();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha Recepção]: Inicializado.');
+    console.log('[ChamaSenha Recepção]: Inicializado com padrão N000.');
   }
 
   bindEvents() {
@@ -244,7 +244,7 @@ class ChamaSenhaApp {
         id = 'P' + padNumber(this.state.senhaPrioridadedCount, 3);
       } else {
         this.state.senhaNormalCount += 1;
-        id = padNumber(this.state.senhaNormalCount, 4);
+        id = 'N' + padNumber(this.state.senhaNormalCount, 3);
       }
 
       const tObj = { id, type: tipo, destination, createdAt: new Date().toISOString() };
@@ -266,7 +266,7 @@ class ChamaSenhaApp {
 
       if (index !== -1) {
         const ticket = this.state.queue.splice(index, 1)[0];
-        if (this.state.senhaAtualText && this.state.senhaAtualText !== '0000') {
+        if (this.state.senhaAtualText && this.state.senhaAtualText !== 'N000') {
           this.state.ultimaSenhaText = this.state.senhaAtualText;
         }
 
@@ -295,7 +295,7 @@ class ChamaSenhaApp {
   }
 
   repetirChamada() {
-    if (this.state.senhaAtualText && this.state.senhaAtualText !== '0000') {
+    if (this.state.senhaAtualText && this.state.senhaAtualText !== 'N000') {
       this.sendEvent('REPEAT_CALL', { state: this.state });
       this.notificarLocal();
     }
@@ -304,7 +304,7 @@ class ChamaSenhaApp {
   voltarNormal() {
     if (this.state.senhaNormalCount > 0) {
       this.state.senhaNormalCount -= 1;
-      this.state.senhaAtualText = padNumber(this.state.senhaNormalCount, 4);
+      this.state.senhaAtualText = 'N' + padNumber(this.state.senhaNormalCount, 3);
       this.state.saveToStorage();
       this.updateUI();
       this.sendEvent('CALL_TICKET', this.state);
@@ -348,6 +348,9 @@ class ChamaSenhaApp {
     if (senhaStr.startsWith('P')) {
       const num = senhaStr.substring(1);
       textoVoz = `Senha prioritária, P, ${num.split('').join(' ')}${gText}`;
+    } else if (senhaStr.startsWith('N')) {
+      const num = senhaStr.substring(1);
+      textoVoz = `Senha normal, N, ${num.split('').join(' ')}${gText}`;
     } else {
       textoVoz = `Senha, ${senhaStr.split('').join(' ')}${gText}`;
     }
@@ -367,7 +370,7 @@ class ChamaSenhaApp {
       if (this.state.senhaAtualText.startsWith('P')) {
         this.dom.displayTypeBadge.textContent = 'Atendimento Prioritário';
         this.dom.displayTypeBadge.className = 'display-type-badge prioridade';
-      } else if (this.state.senhaAtualText !== '0000') {
+      } else if (this.state.senhaAtualText !== 'N000' && this.state.senhaAtualText !== '0000') {
         this.dom.displayTypeBadge.textContent = 'Atendimento Normal';
         this.dom.displayTypeBadge.className = 'display-type-badge normal';
       } else {
@@ -377,7 +380,6 @@ class ChamaSenhaApp {
     }
 
     const rawQueue = this.state.queue || [];
-    // ORDENAÇÃO: PRIORIDADES NO TOPO DA FILA
     const sortedQueue = [...rawQueue].sort((a, b) => {
       if (a.type === 'PRIORIDADE' && b.type !== 'PRIORIDADE') return -1;
       if (a.type !== 'PRIORIDADE' && b.type === 'PRIORIDADE') return 1;

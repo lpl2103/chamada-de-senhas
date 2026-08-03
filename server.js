@@ -2,7 +2,8 @@
  * ============================================================================
  * SISTEMA CHAMA SENHA - SERVIDOR BACKEND (NODE.JS REAL-TIME & PERSISTÊNCIA)
  * ============================================================================
- * Servidor HTTP e WebSocket nativo com suporte a histórico limitado a 3 itens.
+ * Servidor HTTP e WebSocket nativo com suporte ao formato de senha Normal N000
+ * e Prioritária P000.
  * ============================================================================
  */
 
@@ -26,12 +27,12 @@ function createInitialState() {
     dailyDate: getTodayDateString(),
     senhaNormalCount: 0,
     senhaPrioridadedCount: 0,
-    senhaAtualText: '0000',
-    ultimaSenhaText: '0000',
+    senhaAtualText: 'N000',
+    ultimaSenhaText: 'N000',
     guicheAtual: 'Recepção',
     tipoAtendimento: 'Aguardando Chamada',
     queue: [],
-    historico: [], // Armazena no máximo 3 itens
+    historico: [],
     somHabilitado: true,
     vozHabilitada: true
   };
@@ -59,6 +60,8 @@ function loadPersistedState() {
         saveStateToDisk();
       } else {
         appState = { ...createInitialState(), ...loaded };
+        if (appState.senhaAtualText === '0000') appState.senhaAtualText = 'N000';
+        if (appState.ultimaSenhaText === '0000') appState.ultimaSenhaText = 'N000';
         appState.historico = (appState.historico || []).slice(0, 3);
         console.log('[ChamaSenha]: Estado anterior carregado do disco com sucesso.');
       }
@@ -191,7 +194,7 @@ function handleClientMessage(senderSocket, message) {
           newTicketId = 'P' + String(appState.senhaPrioridadedCount).padStart(3, '0');
         } else {
           appState.senhaNormalCount += 1;
-          newTicketId = String(appState.senhaNormalCount).padStart(4, '0');
+          newTicketId = 'N' + String(appState.senhaNormalCount).padStart(3, '0');
         }
 
         const ticketObj = {
@@ -236,7 +239,7 @@ function handleClientMessage(senderSocket, message) {
         }
 
         if (ticketToCall) {
-          if (appState.senhaAtualText && appState.senhaAtualText !== '0000') {
+          if (appState.senhaAtualText && appState.senhaAtualText !== 'N000' && appState.senhaAtualText !== '0000') {
             appState.ultimaSenhaText = appState.senhaAtualText;
           }
 
@@ -252,7 +255,7 @@ function handleClientMessage(senderSocket, message) {
 
           if (!appState.historico.length || appState.historico[0].ticketId !== ticketToCall.id) {
             appState.historico.unshift(historyEntry);
-            if (appState.historico.length > 3) appState.historico.pop(); // Limita a 3 itens
+            if (appState.historico.length > 3) appState.historico.pop();
           }
 
           saveStateToDisk();

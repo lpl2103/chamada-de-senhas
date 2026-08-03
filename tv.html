@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Painel de Exibição Pública de Senhas para TV e Monitor - Zenit Tecnologia" />
+  <meta name="description" content="Painel da TV da Sala de Espera - ChamaSenha - Zenit Tecnologia" />
   <meta name="theme-color" content="#003a5f" />
 
   <title>Painel TV - ChamaSenha</title>
@@ -16,44 +16,42 @@
   <!-- Estilos Gerais da Aplicação -->
   <link rel="stylesheet" href="css/style.css" />
 
-  <!-- Script Específico da Tela de TV -->
+  <!-- Script Específico do Painel da TV -->
   <script src="js/tv.js" defer></script>
 </head>
 
 <body class="tv-mode">
-  <!-- Link de Acessibilidade -->
   <a href="#main-tv-content" class="skip-link">Pular para o conteúdo principal</a>
 
   <!-- ====================================================================
-       CABEÇALHO DA TV (REDUZIDO - SOMENTE RELÓGIO & DATA)
+       CABEÇALHO MINIMALISTA DA TV (APENAS HORA E DATA)
        ==================================================================== -->
   <header class="app-header tv-header-minimal" role="banner">
     <div class="tv-header-content">
       <div class="clock-display">
         <span id="digitalClock" class="clock-time">00:00:00</span>
-        <span id="digitalDate" class="clock-date">--/--/----</span>
+        <span id="digitalDate" class="clock-date">seg., 01/01/2026</span>
       </div>
     </div>
   </header>
 
   <!-- ====================================================================
-       DISPLAY PRINCIPAL DA TV (AJUSTADO À VIEWPORT 100VH)
+       CONTEÚDO PRINCIPAL DA TV (ENCAIXE PERFEITO EM 100VH)
        ==================================================================== -->
   <main id="main-tv-content" class="main-container tv-container" role="main">
     
-    <!-- Painel Gigante da Senha Chamada -->
+    <!-- Card Gigante de Exibição Principal da TV -->
     <section id="tvDisplayCard" class="display-card tv-display-card" aria-live="assertive" aria-atomic="true">
       <div class="tv-card-header">
         <span class="display-label">SENHA</span>
-        <span id="tvGuicheBadge" class="tv-guiche-badge">GUICHÊ 01</span>
+        <span id="tvGuicheBadge" class="guiche-badge-pill tv-guiche-badge">GUICHÊ 01</span>
       </div>
 
-      <div id="tvSenhaAtualNumero" class="display-number tv-display-number">0000</div>
-
+      <div id="tvSenhaAtualNumero" class="display-number tv-display-number">N000</div>
       <div id="tvDisplayTypeBadge" class="display-type-badge tv-type-badge">Aguardando Chamada</div>
     </section>
 
-    <!-- Barra Inferior de Últimas Chamadas -->
+    <!-- Lista Vertical do Histórico das Últimas 3 Senhas Chamadas -->
     <section class="secondary-card tv-history-card" aria-label="Histórico de Chamadas Recentes">
       <h2 class="card-title tv-history-title">ÚLTIMAS SENHAS CHAMADAS</h2>
       <ul id="tvHistoricoLista" class="history-list tv-history-list">
@@ -63,15 +61,15 @@
 
   </main>
 
-  <!-- Elemento de Áudio para Sinal Sonoro -->
+  <!-- Áudio Sonoro para Anúncio -->
   <audio id="audioChamada" preload="auto">
     <source src="audio/chamada.wav" type="audio/wav" />
   </audio>
 
-  <!-- Rodapé com Indicador de Conexão Real-Time -->
+  <!-- Rodapé Minimalista com Indicador de Conexão -->
   <footer class="app-footer tv-footer" role="contentinfo">
     <div class="footer-content">
-      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA</p>
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Sistema de Chamada de Senhas</p>
       
       <div class="status-indicator">
         <span id="statusDot" class="status-dot online"></span>
