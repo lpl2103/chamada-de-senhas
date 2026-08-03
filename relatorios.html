@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard de Relatórios BI e Métricas de Atendimento - ChamaSenha Enterprise" />
+  <meta name="theme-color" content="#003a5f" />
+
+  <title>Relatórios & BI - ChamaSenha</title>
+
+  <!-- Fontes de Alta Performance Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Estilos Gerais da Aplicação -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Script de Relatórios BI -->
+  <script src="js/relatorios.js" defer></script>
+</head>
+
+<body class="admin-mode">
+  <a href="#main-reports-content" class="skip-link">Pular para o conteúdo principal</a>
+
+  <!-- Cabeçalho -->
+  <header class="app-header" role="banner">
+    <div class="header-container">
+      <div class="brand-section">
+        <img src="imagens/nvzenit.webp" alt="Logo Zenit Tecnologia" class="brand-logo" />
+        <div>
+          <h1 class="brand-title">ZENIT TECNOLOGIA</h1>
+          <p class="brand-subtitle">Relatórios BI & Métricas Gerenciais de Atendimento</p>
+        </div>
+      </div>
+
+      <nav class="header-actions" aria-label="Navegação">
+        <a href="index.html" class="icon-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>Recepção</span>
+        </a>
+
+        <a href="atendimento.html" class="icon-btn link-doctor-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          <span>Consultório</span>
+        </a>
+
+        <a href="tv.html" target="_blank" class="icon-btn link-tv-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+          <span>Tela TV</span>
+        </a>
+
+        <button id="themeToggleBtn" class="icon-btn" title="Alternar Tema">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo dos Relatórios -->
+  <main id="main-reports-content" class="main-container reports-container" role="main">
+    
+    <!-- Cards de Métricas Principais (BI) -->
+    <section class="metrics-grid" aria-label="Indicadores Chave de Atendimento">
+      <div class="metric-card">
+        <span class="metric-title">Total Emitidas Hoje</span>
+        <strong id="metricTotalIssued" class="metric-value">0</strong>
+        <span class="metric-sub">Senhas Normais + Prioritárias</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-title">Tempo Médio de Espera (TME)</span>
+        <strong id="metricAvgWait" class="metric-value">0 min</strong>
+        <span class="metric-sub">Emissão $\rightarrow$ Chamada</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-title">Tempo Médio de Atendimento (TMA)</span>
+        <strong id="metricAvgService" class="metric-value">0 min</strong>
+        <span class="metric-sub">Início $\rightarrow$ Finalização</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-title">Pacientes Ausentes</span>
+        <strong id="metricTotalAbsent" class="metric-value">0</strong>
+        <span class="metric-sub">Não compareceram</span>
+      </div>
+    </section>
+
+    <!-- Tabela Detalhada & Ação de Exportar -->
+    <section class="secondary-card reports-table-card" aria-label="Tabela de Atendimentos Concluídos">
+      <div class="reports-table-header">
+        <h3 class="card-title">HISTÓRICO DETALHADO DO DIA (<span id="completedCount">0</span>)</h3>
+        <button id="btnExportCSV" class="btn-control btn-export-csv" title="Exportar Planilha Excel/CSV">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span>EXPORTAR PLANILHA (CSV)</span>
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="reports-table">
+          <thead>
+            <tr>
+              <th>Senha</th>
+              <th>Paciente</th>
+              <th>Tipo</th>
+              <th>Local</th>
+              <th>Horário Emissão</th>
+              <th>Horário Chamada</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTableBody">
+            <tr>
+              <td colspan="7" class="table-empty">Nenhum atendimento concluído hoje.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="app-footer" role="contentinfo">
+    <div class="footer-content">
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Módulo BI Enterprise</p>
+      <div class="status-indicator">
+        <span id="statusDot" class="status-dot online"></span>
+        <span id="statusText">Conectado ao Servidor</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

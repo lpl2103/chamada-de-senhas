@@ -4,7 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel da TV/Monitor (tv.html).
- *            Suporte ao formato N000 e anúncio de voz em 3 repetições.
+ *            Anuncia o nome do paciente por voz quando informado.
  * ============================================================================
  */
 
@@ -19,6 +19,7 @@ class ChamaSenhaTV {
     // Elementos do DOM da TV
     this.dom = {
       senhaAtualNumero: document.getElementById('tvSenhaAtualNumero'),
+      tvPatientName: document.getElementById('tvPatientName'),
       guicheBadge: document.getElementById('tvGuicheBadge'),
       displayTypeBadge: document.getElementById('tvDisplayTypeBadge'),
       displayCard: document.getElementById('tvDisplayCard'),
@@ -38,7 +39,7 @@ class ChamaSenhaTV {
     this.initTheme();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha TV]: Painel da TV inicializado (Formato N000).');
+    console.log('[ChamaSenha TV Enterprise]: Inicializado.');
   }
 
   bindEvents() {
@@ -138,6 +139,10 @@ class ChamaSenhaTV {
       this.dom.senhaAtualNumero.textContent = text;
     }
 
+    if (this.dom.tvPatientName) {
+      this.dom.tvPatientName.textContent = state.patientNameAtual ? state.patientNameAtual : '';
+    }
+
     if (this.dom.guicheBadge) {
       this.dom.guicheBadge.textContent = state.guicheAtual || 'GUICHÊ 01';
     }
@@ -167,10 +172,12 @@ class ChamaSenhaTV {
 
           let ticketId = '';
           let destination = '';
+          let patientName = '';
 
           if (typeof item === 'object' && item !== null) {
             ticketId = item.ticketId || item.id || '';
             destination = item.destination || item.guiche || '';
+            patientName = item.patientName || '';
           } else {
             const textStr = String(item);
             if (textStr.includes('-')) {
@@ -182,8 +189,10 @@ class ChamaSenhaTV {
             }
           }
 
+          const nameText = patientName ? ` (${patientName})` : '';
+
           if (destination) {
-            li.innerHTML = `<strong>${ticketId}</strong> <span style="opacity: 0.85; font-weight: 600;">- ${destination}</span>`;
+            li.innerHTML = `<strong>${ticketId}</strong>${nameText} <span style="opacity: 0.85; font-weight: 600;">- ${destination}</span>`;
           } else {
             li.textContent = ticketId;
           }
@@ -197,7 +206,7 @@ class ChamaSenhaTV {
       this.animateCard();
       this.tocarGingle(() => {
         if (this.vozHabilitada) {
-          this.anunciarVoz3Vezes(state.senhaAtualText, state.guicheAtual, 3);
+          this.anunciarVoz3Vezes(state.senhaAtualText, state.guicheAtual, state.patientNameAtual, 3);
         }
       });
     }
@@ -229,7 +238,7 @@ class ChamaSenhaTV {
           };
         })
         .catch((err) => {
-          console.warn('[TV Audio]: Bloqueio de autoplay no navegador:', err);
+          console.warn('[TV Audio]: Bloqueio de autoplay:', err);
           if (onCompleteCallback) onCompleteCallback();
         });
     } else {
@@ -237,22 +246,23 @@ class ChamaSenhaTV {
     }
   }
 
-  anunciarVoz3Vezes(senhaStr, guicheStr, repeticoes = 3) {
+  anunciarVoz3Vezes(senhaStr, guicheStr, patientName = '', repeticoes = 3) {
     if (!this.speechSynth || !this.vozHabilitada) return;
 
     this.speechSynth.cancel();
 
     let textoVoz = '';
     const guicheFormatado = guicheStr ? `, ${guicheStr}` : '';
+    const nameFormatado = patientName ? `, ${patientName}` : '';
 
     if (senhaStr.startsWith('P')) {
       const num = senhaStr.substring(1);
-      textoVoz = `Senha prioritária, P, ${num.split('').join(' ')}${guicheFormatado}`;
+      textoVoz = `Senha prioritária, P, ${num.split('').join(' ')}${nameFormatado}${guicheFormatado}`;
     } else if (senhaStr.startsWith('N')) {
       const num = senhaStr.substring(1);
-      textoVoz = `Senha normal, N, ${num.split('').join(' ')}${guicheFormatado}`;
+      textoVoz = `Senha normal, N, ${num.split('').join(' ')}${nameFormatado}${guicheFormatado}`;
     } else {
-      textoVoz = `Senha, ${senhaStr.split('').join(' ')}${guicheFormatado}`;
+      textoVoz = `Senha, ${senhaStr.split('').join(' ')}${nameFormatado}${guicheFormatado}`;
     }
 
     let count = 0;

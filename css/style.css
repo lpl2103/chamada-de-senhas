@@ -1,7 +1,7 @@
 /* ==========================================================================
-   SISTEMA CHAMA SENHA - STYLESHEET COMPLETO (CSS3 PURÍSSIMO)
+   SISTEMA CHAMA SENHA - STYLESHEET COMPLETO ENTERPRISE (CSS3 PURÍSSIMO)
    ==========================================================================
-   Suporte a: Multi-Telas (TV, Consultórios & Recepção), Triagem de Fila,
+   Suporte a: Multi-Telas, Triagem por Nome, Relatórios BI, Ações do Atendimento,
    Modais Customizados, Temas Escuro/Claro, Layout 2-Colunas e Responsividade.
    ========================================================================== */
 
@@ -172,7 +172,7 @@ body {
   gap: 0.5rem;
 }
 
-.icon-btn, .link-tv-btn, .link-doctor-btn {
+.icon-btn, .link-tv-btn, .link-doctor-btn, .link-reports-btn {
   background: var(--bg-color);
   border: 1px solid var(--surface-border);
   color: var(--text-main);
@@ -189,7 +189,7 @@ body {
   transition: all var(--transition-fast);
 }
 
-.icon-btn:hover, .link-tv-btn:hover, .link-doctor-btn:hover {
+.icon-btn:hover, .link-tv-btn:hover, .link-doctor-btn:hover, .link-reports-btn:hover {
   background: var(--primary-light);
   color: var(--primary-color);
   border-color: var(--primary-color);
@@ -288,6 +288,14 @@ body {
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
+.display-patient-name, .doctor-patient-name-display {
+  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+  font-weight: 800;
+  color: var(--accent-light);
+  margin-top: 0.2rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
 .display-type-badge {
   display: inline-block;
   margin-top: 0.5rem;
@@ -322,7 +330,7 @@ body {
   margin-bottom: 0.4rem;
 }
 
-/* Card de Emissão de Senhas (Triagem) */
+/* Card de Emissão de Senhas (Triagem com Nome do Paciente) */
 .issue-ticket-card {
   padding: 1.25rem;
   text-align: left;
@@ -339,6 +347,27 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.issue-name-row {
+  width: 100%;
+}
+
+.issue-name-input {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--surface-border);
+  background: var(--surface-color);
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.issue-name-input:focus {
+  border-color: var(--primary-color);
 }
 
 .issue-label {
@@ -442,7 +471,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   5. PAINEL DE CONTROLES DO OPERADOR
+   5. PAINEL DE CONTROLES DO OPERADOR & MÉTODOS DO CONSULTÓRIO
    -------------------------------------------------------------------------- */
 .controls-section, .admin-controls-panel {
   background: var(--surface-color);
@@ -469,7 +498,6 @@ body {
   gap: 0.75rem;
 }
 
-/* Botões do Atendimento Estilizados */
 .btn-control {
   padding: 0.75rem 0.85rem;
   border: none;
@@ -508,6 +536,16 @@ body {
 
 .btn-reset { background-color: #dc2626 !important; }
 .btn-reset:hover { background-color: #b91c1c !important; }
+
+/* Novos Botões do Consultório Enterprise */
+.btn-doctor-start { background-color: #0284c7 !important; }
+.btn-doctor-start:hover { background-color: #0369a1 !important; }
+
+.btn-doctor-complete { background-color: #059669 !important; }
+.btn-doctor-complete:hover { background-color: #047857 !important; }
+
+.btn-doctor-absent { background-color: #dc2626 !important; }
+.btn-doctor-absent:hover { background-color: #b91c1c !important; }
 
 .btn-shortcut-hint {
   font-size: 0.7rem;
@@ -629,23 +667,19 @@ html.doctor-mode, body.doctor-mode {
 
 .doctor-action-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
 }
 
 .btn-doctor-call {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  padding: 1rem 1.25rem;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
-.btn-doctor-call:hover { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
 
 .btn-doctor-repeat {
   background: #2563eb;
-  padding: 1rem 1.25rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
-.btn-doctor-repeat:hover { background: #1d4ed8; }
 
 .doctor-queue-list-card {
   padding: 1rem 1.25rem;
@@ -672,7 +706,121 @@ html.doctor-mode, body.doctor-mode {
 }
 
 /* --------------------------------------------------------------------------
-   7. MODAL CUSTOMIZADO
+   7. DASHBOARD E RELATÓRIOS BI (relatorios.html)
+   -------------------------------------------------------------------------- */
+.reports-container {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.metric-card {
+  background: var(--surface-color);
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.metric-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.metric-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--primary-color);
+  line-height: 1.1;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.reports-table-card {
+  padding: 1.5rem;
+}
+
+.reports-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.btn-export-csv {
+  background-color: #059669 !important;
+  flex-direction: row;
+  padding: 0.6rem 1.25rem;
+}
+.btn-export-csv:hover { background-color: #047857 !important; }
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.reports-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.reports-table th {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  font-weight: 800;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--surface-border);
+}
+
+.reports-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.table-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 2rem;
+}
+
+.badge-status {
+  padding: 0.25rem 0.65rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.badge-status.success { background: #dcfce7; color: #15803d; }
+.badge-status.danger { background: #fee2e2; color: #b91c1c; }
+.badge-status.info { background: #e0f2fe; color: #0369a1; }
+
+/* --------------------------------------------------------------------------
+   8. MODAL CUSTOMIZADO & ESTILOS DA TV
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
@@ -729,7 +877,7 @@ html.doctor-mode, body.doctor-mode {
 .btn-modal-confirm:hover { background: #b91c1c; }
 
 /* --------------------------------------------------------------------------
-   8. ESTILOS DA TELA DE TV (LOGO NO CANTO SUPERIOR ESQUERDO)
+   9. ESTILOS DA TELA DE TV (tv.html)
    -------------------------------------------------------------------------- */
 html.tv-mode, body.tv-mode {
   height: 100vh;
@@ -811,7 +959,6 @@ html.tv-mode, body.tv-mode {
 .tv-display-number { font-size: clamp(5.5rem, 18vw, 14rem); line-height: 0.9; }
 .tv-type-badge { font-size: clamp(1.1rem, 2vw, 1.75rem); padding: 0.4rem 2rem; margin-top: 0.5rem; }
 
-/* Histórico em Lista Vertical na TV */
 .tv-history-card {
   padding: 0.85rem 1.5rem;
   flex-shrink: 0;
@@ -857,7 +1004,7 @@ html.tv-mode, body.tv-mode {
 .status-dot.offline { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
 /* --------------------------------------------------------------------------
-   9. RODAPÉ
+   10. RODAPÉ
    -------------------------------------------------------------------------- */
 .app-footer {
   background-color: var(--surface-color);

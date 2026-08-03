@@ -1,9 +1,11 @@
 /**
  * ============================================================================
- * SISTEMA CHAMA SENHA - SERVIDOR BACKEND (NODE.JS REAL-TIME & PERSISTÊNCIA)
+ * SISTEMA CHAMA SENHA - SERVIDOR BACKEND ENTERPRISE (NODE.JS REAL-TIME)
  * ============================================================================
- * Servidor HTTP e WebSocket nativo com suporte ao formato de senha Normal N000
- * e Prioritária P000.
+ * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
+ * Descrição: Servidor HTTP & WebSocket Nativo com suporte a Nome do Paciente,
+ *            Estados de Atendimento (TME/TMA), Métricas BI (/api/metrics)
+ *            e Persistência em Disco em data/state.json.
  * ============================================================================
  */
 
@@ -31,8 +33,10 @@ function createInitialState() {
     ultimaSenhaText: 'N000',
     guicheAtual: 'Recepção',
     tipoAtendimento: 'Aguardando Chamada',
+    patientNameAtual: '',
     queue: [],
     historico: [],
+    completedTickets: [],
     somHabilitado: true,
     vozHabilitada: true
   };
@@ -55,7 +59,7 @@ function loadPersistedState() {
       
       const today = getTodayDateString();
       if (loaded.dailyDate !== today) {
-        console.log(`[ChamaSenha]: Novo dia detectado (${today}). Resetando contadores diariamente...`);
+        console.log(`[ChamaSenha Enterprise]: Novo dia detectado (${today}). Resetando contadores diários...`);
         appState = createInitialState();
         saveStateToDisk();
       } else {
@@ -63,13 +67,13 @@ function loadPersistedState() {
         if (appState.senhaAtualText === '0000') appState.senhaAtualText = 'N000';
         if (appState.ultimaSenhaText === '0000') appState.ultimaSenhaText = 'N000';
         appState.historico = (appState.historico || []).slice(0, 3);
-        console.log('[ChamaSenha]: Estado anterior carregado do disco com sucesso.');
+        console.log('[ChamaSenha Enterprise]: Estado carregado do disco com sucesso.');
       }
     } else {
       saveStateToDisk();
     }
   } catch (err) {
-    console.error('[ChamaSenha Error]: Falha ao carregar estado do disco:', err);
+    console.error('[ChamaSenha Error]: Falha ao carregar estado:', err);
   }
 }
 
@@ -78,7 +82,7 @@ function saveStateToDisk() {
     ensureDataDir();
     fs.writeFileSync(STATE_FILE, JSON.stringify(appState, null, 2), 'utf-8');
   } catch (err) {
-    console.error('[ChamaSenha Error]: Falha ao salvar estado no disco:', err);
+    console.error('[ChamaSenha Error]: Falha ao salvar estado:', err);
   }
 }
 
@@ -90,6 +94,49 @@ function checkDailyReset() {
     saveStateToDisk();
     broadcastMessage({ type: 'TICKETS_RESET', payload: appState });
   }
+}
+
+function calculateMetrics() {
+  const completed = appState.completedTickets || [];
+  const totalTickets = (appState.queue ? appState.queue.length : 0) + completed.length;
+
+  let totalWaitMs = 0;
+  let waitCount = 0;
+  let totalServiceMs = 0;
+  let serviceCount = 0;
+  let absentCount = 0;
+
+  completed.forEach(t => {
+    if (t.status === 'ABSENT') absentCount++;
+    if (t.createdAt && t.calledAt) {
+      const wait = new Date(t.calledAt) - new Date(t.createdAt);
+      if (wait >= 0) {
+        totalWaitMs += wait;
+        waitCount++;
+      }
+    }
+    if (t.startedAt && t.endedAt) {
+      const service = new Date(t.endedAt) - new Date(t.startedAt);
+      if (service >= 0) {
+        totalServiceMs += service;
+        serviceCount++;
+      }
+    }
+  });
+
+  const avgWaitMin = waitCount > 0 ? Math.round((totalWaitMs / waitCount) / 60000) : 0;
+  const avgServiceMin = serviceCount > 0 ? Math.round((totalServiceMs / serviceCount) / 60000) : 0;
+
+  return {
+    dailyDate: appState.dailyDate,
+    totalIssued: appState.senhaNormalCount + appState.senhaPrioridadedCount,
+    totalQueue: appState.queue ? appState.queue.length : 0,
+    totalCompleted: completed.length,
+    totalAbsent: absentCount,
+    avgWaitMin,
+    avgServiceMin,
+    completedTickets: completed
+  };
 }
 
 loadPersistedState();
@@ -105,6 +152,7 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.wav': 'audio/wav',
   '.ico': 'image/x-icon',
   '.svg': 'image/svg+xml'
@@ -116,6 +164,11 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/state' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(appState));
+  }
+
+  if (req.url === '/api/metrics' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(calculateMetrics()));
   }
 
   let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
@@ -186,7 +239,7 @@ function handleClientMessage(senderSocket, message) {
 
     switch (data.type) {
       case 'ISSUE_TICKET': {
-        const { type, destination } = data.payload;
+        const { type, destination, patientName } = data.payload || {};
         let newTicketId = '';
 
         if (type === 'PRIORIDADE') {
@@ -201,7 +254,9 @@ function handleClientMessage(senderSocket, message) {
           id: newTicketId,
           type: type || 'NORMAL',
           destination: destination || 'Geral',
-          createdAt: new Date().toISOString()
+          patientName: (patientName || '').trim(),
+          createdAt: new Date().toISOString(),
+          status: 'WAITING'
         };
 
         appState.queue.push(ticketObj);
@@ -243,14 +298,25 @@ function handleClientMessage(senderSocket, message) {
             appState.ultimaSenhaText = appState.senhaAtualText;
           }
 
+          ticketToCall.calledAt = new Date().toISOString();
+          ticketToCall.status = 'CALLED';
+          ticketToCall.destination = destination || ticketToCall.destination || 'Recepção';
+
+          appState.currentTicket = ticketToCall;
           appState.senhaAtualText = ticketToCall.id;
-          appState.guicheAtual = destination || ticketToCall.destination || 'Recepção';
+          appState.patientNameAtual = ticketToCall.patientName || '';
+          appState.guicheAtual = ticketToCall.destination;
           appState.tipoAtendimento = ticketToCall.type === 'PRIORIDADE' ? 'Atendimento Prioritário' : 'Atendimento Normal';
+
+          const historyText = ticketToCall.patientName 
+            ? `${ticketToCall.id} (${ticketToCall.patientName}) - ${appState.guicheAtual}`
+            : `${ticketToCall.id} - ${appState.guicheAtual}`;
 
           const historyEntry = {
             ticketId: ticketToCall.id,
+            patientName: ticketToCall.patientName,
             destination: appState.guicheAtual,
-            text: `${ticketToCall.id} - ${appState.guicheAtual}`
+            text: historyText
           };
 
           if (!appState.historico.length || appState.historico[0].ticketId !== ticketToCall.id) {
@@ -266,11 +332,61 @@ function handleClientMessage(senderSocket, message) {
         break;
       }
 
-      case 'CALL_TICKET': {
-        appState = { ...appState, ...data.payload };
-        if (appState.historico.length > 3) appState.historico = appState.historico.slice(0, 3);
-        saveStateToDisk();
-        broadcastMessage({ type: 'TICKET_CALLED', payload: appState });
+      case 'START_SERVICE': {
+        const { ticketId } = data.payload || {};
+        if (appState.currentTicket && appState.currentTicket.id === ticketId) {
+          appState.currentTicket.startedAt = new Date().toISOString();
+          appState.currentTicket.status = 'IN_SERVICE';
+          saveStateToDisk();
+          broadcastMessage({ type: 'SERVICE_STARTED', payload: appState });
+        }
+        break;
+      }
+
+      case 'COMPLETE_SERVICE': {
+        const { ticketId } = data.payload || {};
+        if (appState.currentTicket && appState.currentTicket.id === ticketId) {
+          appState.currentTicket.endedAt = new Date().toISOString();
+          appState.currentTicket.status = 'COMPLETED';
+          
+          if (!appState.completedTickets) appState.completedTickets = [];
+          appState.completedTickets.push(appState.currentTicket);
+          
+          saveStateToDisk();
+          broadcastMessage({ type: 'SERVICE_COMPLETED', payload: appState });
+        }
+        break;
+      }
+
+      case 'MARK_ABSENT': {
+        const { ticketId } = data.payload || {};
+        if (appState.currentTicket && appState.currentTicket.id === ticketId) {
+          appState.currentTicket.endedAt = new Date().toISOString();
+          appState.currentTicket.status = 'ABSENT';
+
+          if (!appState.completedTickets) appState.completedTickets = [];
+          appState.completedTickets.push(appState.currentTicket);
+
+          saveStateToDisk();
+          broadcastMessage({ type: 'SERVICE_ABSENT', payload: appState });
+        }
+        break;
+      }
+
+      case 'REDIRECT_TICKET': {
+        const { ticketId, newDestination } = data.payload || {};
+        if (appState.currentTicket && appState.currentTicket.id === ticketId) {
+          const redirectedObj = {
+            ...appState.currentTicket,
+            destination: newDestination,
+            status: 'WAITING',
+            redirectedFrom: appState.currentTicket.destination
+          };
+
+          appState.queue.push(redirectedObj);
+          saveStateToDisk();
+          broadcastMessage({ type: 'TICKET_REDIRECTED', payload: { redirectedTicket: redirectedObj, state: appState } });
+        }
         break;
       }
 
@@ -365,10 +481,11 @@ function parseWebSocketFrame(buffer) {
 
 server.listen(PORT, () => {
   console.log(`====================================================`);
-  console.log(`🚀 SERVIDOR CHAMA SENHA EXECUTANDO COM SUCESSO!`);
+  console.log(`🚀 SERVIDOR CHAMA SENHA ENTERPRISE EXECUTANDO!`);
   console.log(`====================================================`);
   console.log(`📍 Recepção / Triagem:   http://localhost:${PORT}/index.html`);
   console.log(`👨‍⚕️ Painel do Consultório: http://localhost:${PORT}/atendimento.html`);
   console.log(`📺 Exibição para TV:     http://localhost:${PORT}/tv.html`);
+  console.log(`📊 Relatórios & BI:      http://localhost:${PORT}/relatorios.html`);
   console.log(`====================================================`);
 });

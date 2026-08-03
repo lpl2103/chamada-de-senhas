@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Painel de Recepção, Triagem e Administração - ChamaSenha - Zenit Tecnologia" />
+  <meta name="description" content="Painel de Recepção, Triagem e Administração - ChamaSenha Enterprise - Zenit Tecnologia" />
   <meta name="theme-color" content="#003a5f" />
 
   <title>Recepção e Triagem - ChamaSenha</title>
@@ -39,7 +39,12 @@
       <nav class="header-actions" aria-label="Navegação do Sistema">
         <a href="atendimento.html" class="icon-btn link-doctor-btn" title="Painel de Atendimento dos Médicos/Consultórios">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-          <span>Painel Consultório</span>
+          <span>Consultório</span>
+        </a>
+
+        <a href="relatorios.html" class="icon-btn link-reports-btn" title="Relatórios e Dashboard Gerencial BI">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          <span>Relatórios BI</span>
         </a>
 
         <a href="tv.html" target="_blank" class="icon-btn link-tv-btn" title="Abrir Tela da TV em nova janela">
@@ -74,17 +79,18 @@
            ================================================================ -->
       <div class="admin-col-left">
         
-        <!-- Status da Senha Atual (Compacto) -->
+        <!-- Status da Senha Atual -->
         <section class="display-card admin-display-card" id="displayCard" aria-live="assertive" aria-atomic="true">
           <div class="card-top-info">
             <span class="display-label">SENHA ATUAL</span>
             <span id="currentGuicheBadge" class="guiche-badge-pill">Recepção</span>
           </div>
           <div id="senhaAtualNumero" class="display-number admin-display-number">N000</div>
+          <div id="displayPatientName" class="display-patient-name"></div>
           <div id="displayTypeBadge" class="display-type-badge">Aguardando Chamada</div>
         </section>
 
-        <!-- Emissão de Novas Senhas (Triagem da Recepção com Consultórios 01 a 05) -->
+        <!-- Emissão de Novas Senhas (Com opção de Nome do Paciente) -->
         <section class="secondary-card issue-ticket-card" aria-label="Emissão e Cadastramento de Senhas">
           <h3 class="card-title">EMISSÃO DE SENHA (TRIAGEM)</h3>
           
@@ -104,19 +110,23 @@
               </select>
             </div>
 
+            <div class="issue-name-row">
+              <input type="text" id="issuePatientName" class="issue-name-input" placeholder="Nome do Paciente (Opcional)" />
+            </div>
+
             <div class="issue-buttons-row">
-              <button id="btnIssueNormal" class="btn-issue btn-issue-normal" title="Emitir Nova Senha Normal para o Destino">
+              <button id="btnIssueNormal" class="btn-issue btn-issue-normal" title="Emitir Nova Senha Normal">
                 <span>+ EMITIR NORMAL</span>
               </button>
 
-              <button id="btnIssuePrior" class="btn-issue btn-issue-prior" title="Emitir Nova Senha Prioritária para o Destino">
+              <button id="btnIssuePrior" class="btn-issue btn-issue-prior" title="Emitir Nova Senha Prioritária">
                 <span>+ EMITIR PRIORIDADE</span>
               </button>
             </div>
           </div>
         </section>
 
-        <!-- Resumo da Fila de Espera em Tempo Real (Prioridades Primeiro) -->
+        <!-- Resumo da Fila de Espera em Tempo Real -->
         <section class="secondary-card queue-summary-card" aria-label="Fila de Espera Atual">
           <div class="queue-summary-header">
             <h3 class="card-title">FILA DE ESPERA (<span id="totalQueueCount">0</span>)</h3>
@@ -219,7 +229,7 @@
   <!-- Rodapé -->
   <footer class="app-footer" role="contentinfo">
     <div class="footer-content">
-      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Painel de Recepção</p>
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Painel de Recepção Enterprise</p>
       
       <div class="status-indicator">
         <span id="statusDot" class="status-dot online"></span>

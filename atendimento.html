@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Painel de Atendimento do Consultório - ChamaSenha - Zenit Tecnologia" />
+  <meta name="description" content="Painel de Atendimento do Consultório - ChamaSenha Enterprise - Zenit Tecnologia" />
   <meta name="theme-color" content="#003a5f" />
 
   <title>Consultório - ChamaSenha</title>
@@ -42,6 +42,11 @@
           <span>Recepção</span>
         </a>
 
+        <a href="relatorios.html" class="icon-btn link-reports-btn" title="Relatórios e Dashboard Gerencial BI">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          <span>Relatórios BI</span>
+        </a>
+
         <a href="tv.html" target="_blank" class="icon-btn link-tv-btn" title="Abrir Tela da TV em nova janela">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
           <span>Tela TV</span>
@@ -55,11 +60,11 @@
   </header>
 
   <!-- ====================================================================
-       CONTEÚDO PRINCIPAL DO CONSULTÓRIO (LAYOUT FOCADO & DIRETO)
+       CONTEÚDO PRINCIPAL DO CONSULTÓRIO (ENTERPRISE)
        ==================================================================== -->
   <main id="main-doctor-content" class="main-container doctor-container" role="main">
     
-    <!-- Configuração da Sala / Consultório Atual (Números de 1 a 5) -->
+    <!-- Configuração da Sala / Consultório Atual -->
     <section class="secondary-card doctor-room-card" aria-label="Identificação do Consultório">
       <div class="doctor-room-group">
         <label for="doctorRoomSelect" class="doctor-room-label">
@@ -93,31 +98,47 @@
       </div>
 
       <div id="doctorSenhaAtualNumero" class="display-number doctor-display-number">N000</div>
+      <div id="doctorPatientName" class="doctor-patient-name-display"></div>
       <div id="doctorDisplayTypeBadge" class="display-type-badge">Aguardando Chamada</div>
     </section>
 
-    <!-- Botões de Ação Direta para o Médico/Profissional -->
+    <!-- Botões de Ação Direta & Estados de Atendimento (Enterprise) -->
     <section class="controls-section doctor-controls-section" aria-label="Controles do Consultório">
       <div class="doctor-action-grid">
         
         <!-- Chamar Próximo Paciente -->
         <button id="btnDoctorCallNext" class="btn-control btn-doctor-call" title="Chamar Próximo Paciente da Fila">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
-          <span>CHAMAR PRÓXIMO PACIENTE</span>
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+          <span>CHAMAR PRÓXIMO</span>
           <span class="btn-shortcut-hint">Seta Direita (→) ou Espaço</span>
         </button>
 
         <!-- Repetir Chamada Atual -->
         <button id="btnDoctorRepeat" class="btn-control btn-doctor-repeat" title="Repetir Chamada no Painel/TV da Sala de Espera">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-          <span>REPETIR CHAMADA</span>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          <span>REPETIR</span>
           <span class="btn-shortcut-hint">Tecla [R]</span>
+        </button>
+
+        <!-- Iniciar Atendimento (TMA) -->
+        <button id="btnDoctorStart" class="btn-control btn-doctor-start" title="Iniciar Atendimento (Inicia contagem TMA)">
+          <span>INICIAR</span>
+        </button>
+
+        <!-- Finalizar Atendimento (TMA) -->
+        <button id="btnDoctorComplete" class="btn-control btn-doctor-complete" title="Finalizar Atendimento do Paciente">
+          <span>FINALIZAR</span>
+        </button>
+
+        <!-- Marcar Paciente Ausente -->
+        <button id="btnDoctorAbsent" class="btn-control btn-doctor-absent" title="Marcar Paciente como Ausente/Faltou">
+          <span>AUSENTE</span>
         </button>
 
       </div>
     </section>
 
-    <!-- Lista Visual de Pacientes Cadastrados Aguardando (Prioridades Sempre em Primeiro) -->
+    <!-- Lista Visual de Pacientes Cadastrados Aguardando (Prioridades Primeiro) -->
     <section class="secondary-card doctor-queue-list-card" aria-label="Lista de Pacientes Cadastrados">
       <h3 class="card-title">SENHAS CADASTRADAS PARA ESTE CONSULTÓRIO (<span id="doctorQueueCount">0</span>)</h3>
       <p class="queue-instruction-hint">Prioridades exibidas em primeiro lugar. Clique para chamar diretamente:</p>
@@ -132,7 +153,7 @@
   <!-- Rodapé do Consultório -->
   <footer class="app-footer" role="contentinfo">
     <div class="footer-content">
-      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Painel do Profissional</p>
+      <p>&copy; <span id="currentYear">2026</span> ZENIT TECNOLOGIA - Painel do Profissional Enterprise</p>
 
       <div class="status-indicator">
         <span id="statusDot" class="status-dot online"></span>

@@ -3,7 +3,7 @@
  * SISTEMA CHAMA SENHA - SCRIPT DA RECEPÇÃO & TRIAGEM (VANILLA JAVASCRIPT ES6+)
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
- * Descrição: Script principal da Recepção (index.html). Suporte ao formato N000.
+ * Descrição: Script principal da Recepção (index.html). Suporte ao Nome do Paciente.
  * ============================================================================
  */
 
@@ -19,6 +19,7 @@ class StateManager {
     this.ultimaSenhaText = (savedState?.ultimaSenhaText && savedState.ultimaSenhaText !== '0000') ? savedState.ultimaSenhaText : 'N000';
     this.guicheAtual = savedState?.guicheAtual ?? 'Recepção';
     this.tipoAtendimento = savedState?.tipoAtendimento ?? 'Aguardando Chamada';
+    this.patientNameAtual = savedState?.patientNameAtual ?? '';
     this.queue = savedState?.queue ?? [];
     this.historico = savedState?.historico ?? [];
     this.somHabilitado = savedState?.somHabilitado ?? true;
@@ -46,6 +47,7 @@ class StateManager {
         ultimaSenhaText: this.ultimaSenhaText,
         guicheAtual: this.guicheAtual,
         tipoAtendimento: this.tipoAtendimento,
+        patientNameAtual: this.patientNameAtual,
         queue: this.queue,
         historico: (this.historico || []).slice(0, 3),
         somHabilitado: this.somHabilitado,
@@ -72,6 +74,7 @@ class StateManager {
     this.senhaAtualText = 'N000';
     this.ultimaSenhaText = 'N000';
     this.tipoAtendimento = 'Aguardando Chamada';
+    this.patientNameAtual = '';
     this.queue = [];
     this.historico = [];
     this.saveToStorage();
@@ -94,11 +97,13 @@ class ChamaSenhaApp {
       ultimaSenhaNumero: document.getElementById('ultimaSenhaNumero'),
       displayCard: document.getElementById('displayCard'),
       displayTypeBadge: document.getElementById('displayTypeBadge'),
+      displayPatientName: document.getElementById('displayPatientName'),
       currentGuicheBadge: document.getElementById('currentGuicheBadge'),
       historicoLista: document.getElementById('historicoLista'),
       totalQueueCount: document.getElementById('totalQueueCount'),
       queueListContainer: document.getElementById('queueListContainer'),
       issueDestinationSelect: document.getElementById('issueDestinationSelect'),
+      issuePatientName: document.getElementById('issuePatientName'),
       btnIssueNormal: document.getElementById('btnIssueNormal'),
       btnIssuePrior: document.getElementById('btnIssuePrior'),
       audioChamada: document.getElementById('audioChamada'),
@@ -126,7 +131,7 @@ class ChamaSenhaApp {
     this.updateUI();
     this.bindEvents();
     this.initCommunication();
-    console.log('[ChamaSenha Recepção]: Inicializado com padrão N000.');
+    console.log('[ChamaSenha Recepção]: Inicializado.');
   }
 
   bindEvents() {
@@ -203,6 +208,10 @@ class ChamaSenhaApp {
       case 'INIT_STATE':
       case 'TICKET_ISSUED':
       case 'TICKET_CALLED':
+      case 'SERVICE_STARTED':
+      case 'SERVICE_COMPLETED':
+      case 'SERVICE_ABSENT':
+      case 'TICKET_REDIRECTED':
       case 'TICKETS_RESET': {
         const payload = data.payload?.state || data.payload;
         if (payload) {
@@ -212,6 +221,7 @@ class ChamaSenhaApp {
           this.state.ultimaSenhaText = payload.ultimaSenhaText ?? this.state.ultimaSenhaText;
           this.state.guicheAtual = payload.guicheAtual ?? this.state.guicheAtual;
           this.state.tipoAtendimento = payload.tipoAtendimento ?? this.state.tipoAtendimento;
+          this.state.patientNameAtual = payload.patientNameAtual ?? this.state.patientNameAtual;
           this.state.queue = payload.queue ?? this.state.queue;
           this.state.historico = payload.historico ?? this.state.historico;
           this.state.saveToStorage();
@@ -235,7 +245,13 @@ class ChamaSenhaApp {
 
   emitirSenha(tipo) {
     const destination = this.dom.issueDestinationSelect?.value || 'Geral';
-    this.sendEvent('ISSUE_TICKET', { type: tipo, destination });
+    const patientName = this.dom.issuePatientName?.value || '';
+
+    this.sendEvent('ISSUE_TICKET', { type: tipo, destination, patientName });
+
+    if (this.dom.issuePatientName) {
+      this.dom.issuePatientName.value = '';
+    }
 
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       let id = '';
@@ -247,7 +263,15 @@ class ChamaSenhaApp {
         id = 'N' + padNumber(this.state.senhaNormalCount, 3);
       }
 
-      const tObj = { id, type: tipo, destination, createdAt: new Date().toISOString() };
+      const tObj = {
+        id,
+        type: tipo,
+        destination,
+        patientName: patientName.trim(),
+        createdAt: new Date().toISOString(),
+        status: 'WAITING'
+      };
+
       this.state.queue.push(tObj);
       this.state.saveToStorage();
       this.updateUI();
@@ -271,13 +295,15 @@ class ChamaSenhaApp {
         }
 
         this.state.senhaAtualText = ticket.id;
+        this.state.patientNameAtual = ticket.patientName || '';
         this.state.guicheAtual = 'Recepção';
         this.state.tipoAtendimento = ticket.type === 'PRIORIDADE' ? 'Atendimento Prioritário' : 'Atendimento Normal';
 
         const historyEntry = {
           ticketId: ticket.id,
+          patientName: ticket.patientName,
           destination: 'Recepção',
-          text: `${ticket.id} - Recepção`
+          text: ticket.patientName ? `${ticket.id} (${ticket.patientName}) - Recepção` : `${ticket.id} - Recepção`
         };
 
         this.state.historico.unshift(historyEntry);
@@ -305,6 +331,7 @@ class ChamaSenhaApp {
     if (this.state.senhaNormalCount > 0) {
       this.state.senhaNormalCount -= 1;
       this.state.senhaAtualText = 'N' + padNumber(this.state.senhaNormalCount, 3);
+      this.state.patientNameAtual = '';
       this.state.saveToStorage();
       this.updateUI();
       this.sendEvent('CALL_TICKET', this.state);
@@ -315,6 +342,7 @@ class ChamaSenhaApp {
     if (this.state.senhaPrioridadedCount > 0) {
       this.state.senhaPrioridadedCount -= 1;
       this.state.senhaAtualText = 'P' + padNumber(this.state.senhaPrioridadedCount, 3);
+      this.state.patientNameAtual = '';
       this.state.saveToStorage();
       this.updateUI();
       this.sendEvent('CALL_TICKET', this.state);
@@ -328,7 +356,7 @@ class ChamaSenhaApp {
       this.dom.displayCard.classList.add('calling');
     }
     if (this.state.somHabilitado) this.tocarGingle();
-    if (this.state.vozHabilitada) setTimeout(() => this.anunciarVoz(this.state.senhaAtualText, this.state.guicheAtual), 700);
+    if (this.state.vozHabilitada) setTimeout(() => this.anunciarVoz(this.state.senhaAtualText, this.state.guicheAtual, this.state.patientNameAtual), 700);
   }
 
   tocarGingle() {
@@ -339,20 +367,22 @@ class ChamaSenhaApp {
     }
   }
 
-  anunciarVoz(senhaStr, guicheStr) {
+  anunciarVoz(senhaStr, guicheStr, patientName = '') {
     if (!this.speechSynth) return;
     this.speechSynth.cancel();
 
     let textoVoz = '';
     const gText = guicheStr ? `, ${guicheStr}` : '';
+    const nameText = patientName ? `, ${patientName}` : '';
+
     if (senhaStr.startsWith('P')) {
       const num = senhaStr.substring(1);
-      textoVoz = `Senha prioritária, P, ${num.split('').join(' ')}${gText}`;
+      textoVoz = `Senha prioritária, P, ${num.split('').join(' ')}${nameText}${gText}`;
     } else if (senhaStr.startsWith('N')) {
       const num = senhaStr.substring(1);
-      textoVoz = `Senha normal, N, ${num.split('').join(' ')}${gText}`;
+      textoVoz = `Senha normal, N, ${num.split('').join(' ')}${nameText}${gText}`;
     } else {
-      textoVoz = `Senha, ${senhaStr.split('').join(' ')}${gText}`;
+      textoVoz = `Senha, ${senhaStr.split('').join(' ')}${nameText}${gText}`;
     }
 
     const utterance = new SpeechSynthesisUtterance(textoVoz);
@@ -365,6 +395,10 @@ class ChamaSenhaApp {
     if (this.dom.senhaAtualNumero) this.dom.senhaAtualNumero.textContent = this.state.senhaAtualText;
     if (this.dom.ultimaSenhaNumero) this.dom.ultimaSenhaNumero.textContent = this.state.ultimaSenhaText;
     if (this.dom.currentGuicheBadge) this.dom.currentGuicheBadge.textContent = this.state.guicheAtual;
+
+    if (this.dom.displayPatientName) {
+      this.dom.displayPatientName.textContent = this.state.patientNameAtual ? `Paciente: ${this.state.patientNameAtual}` : '';
+    }
 
     if (this.dom.displayTypeBadge) {
       if (this.state.senhaAtualText.startsWith('P')) {
@@ -397,7 +431,8 @@ class ChamaSenhaApp {
           const pill = document.createElement('button');
           pill.className = `queue-item-pill ${t.type === 'PRIORIDADE' ? 'prioridade' : ''}`;
           pill.title = `Clique para chamar ${t.id} agora`;
-          pill.innerHTML = `<strong>${t.id}</strong> <span>(${t.destination})</span>`;
+          const namePart = t.patientName ? ` - ${t.patientName}` : '';
+          pill.innerHTML = `<strong>${t.id}</strong> <span>(${t.destination}${namePart})</span>`;
           pill.addEventListener('click', () => this.chamarSenhaEspecifica(t.id));
           this.dom.queueListContainer.appendChild(pill);
         });

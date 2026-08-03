@@ -4,8 +4,7 @@
  * ============================================================================
  * Autor: Zenit Tecnologia (Modernizado por Engenheiro de Software Sênior)
  * Descrição: Script especializado para o Painel do Médico/Consultório (atendimento.html).
- *            Consultórios renomeados para números (Consultório 01 a 05).
- *            Prioridades SEMPRE posicionadas na frente da fila de atendimento.
+ *            Suporte aos botões de Iniciar, Finalizar Atendimento e Marcar Ausente.
  * ============================================================================
  */
 
@@ -13,6 +12,7 @@ class ChamaSenhaDoctorApp {
   constructor() {
     this.socket = null;
     this.broadcastChannel = null;
+    this.currentTicket = null;
 
     let savedRoom = localStorage.getItem('chama_senha_doctor_room');
     if (!savedRoom || savedRoom.includes('Consultório A') || savedRoom.includes('Consultório B') || savedRoom.includes('Consultório C')) {
@@ -29,10 +29,14 @@ class ChamaSenhaDoctorApp {
       doctorQueueCount: document.getElementById('doctorQueueCount'),
       doctorQueueContainer: document.getElementById('doctorQueueContainer'),
       senhaAtualNumero: document.getElementById('doctorSenhaAtualNumero'),
+      doctorPatientName: document.getElementById('doctorPatientName'),
       displayTypeBadge: document.getElementById('doctorDisplayTypeBadge'),
       displayCard: document.getElementById('doctorDisplayCard'),
       btnCallNext: document.getElementById('btnDoctorCallNext'),
       btnRepeat: document.getElementById('btnDoctorRepeat'),
+      btnStart: document.getElementById('btnDoctorStart'),
+      btnComplete: document.getElementById('btnDoctorComplete'),
+      btnAbsent: document.getElementById('btnDoctorAbsent'),
       statusDot: document.getElementById('statusDot'),
       statusText: document.getElementById('statusText'),
       themeToggleBtn: document.getElementById('themeToggleBtn')
@@ -49,7 +53,7 @@ class ChamaSenhaDoctorApp {
       this.dom.doctorRoomSelect.value = this.selectedRoom;
     }
     this.updateRoomLabel();
-    console.log(`[ChamaSenha Consultório]: Inicializado no ${this.selectedRoom}. Prioridades no topo da fila.`);
+    console.log(`[ChamaSenha Consultório]: Inicializado no ${this.selectedRoom}.`);
   }
 
   bindEvents() {
@@ -64,6 +68,9 @@ class ChamaSenhaDoctorApp {
 
     this.dom.btnCallNext?.addEventListener('click', () => this.chamarProximoPaciente());
     this.dom.btnRepeat?.addEventListener('click', () => this.repetirChamada());
+    this.dom.btnStart?.addEventListener('click', () => this.iniciarAtendimento());
+    this.dom.btnComplete?.addEventListener('click', () => this.finalizarAtendimento());
+    this.dom.btnAbsent?.addEventListener('click', () => this.marcarAusente());
     this.dom.themeToggleBtn?.addEventListener('click', () => this.toggleTheme());
   }
 
@@ -143,18 +150,19 @@ class ChamaSenhaDoctorApp {
     // Atualiza número da última senha se a chamada for para esta sala
     if (state.guicheAtual === this.selectedRoom && state.senhaAtualText) {
       if (this.dom.senhaAtualNumero) this.dom.senhaAtualNumero.textContent = state.senhaAtualText;
+      if (this.dom.doctorPatientName) {
+        this.dom.doctorPatientName.textContent = state.patientNameAtual ? `Paciente: ${state.patientNameAtual}` : '';
+      }
       if (this.dom.displayTypeBadge) {
         this.dom.displayTypeBadge.textContent = state.tipoAtendimento || 'Em Atendimento';
       }
     }
 
-    // Filtra senhas cadastradas para este consultório ou fila geral
     const queue = state.queue || [];
     const roomTickets = queue.filter(
       (t) => t.destination === this.selectedRoom || t.destination === 'Geral'
     );
 
-    // ORDENAÇÃO: PRIORIDADES SEMPRE NA FRENTE DAS NORMAIS
     roomTickets.sort((a, b) => {
       if (a.type === 'PRIORIDADE' && b.type !== 'PRIORIDADE') return -1;
       if (a.type !== 'PRIORIDADE' && b.type === 'PRIORIDADE') return 1;
@@ -168,7 +176,6 @@ class ChamaSenhaDoctorApp {
       this.dom.doctorQueueCount.textContent = roomTickets.length;
     }
 
-    // Renderiza a lista de senhas cadastradas para o consultório (Prioridades primeiro)
     if (this.dom.doctorQueueContainer) {
       this.dom.doctorQueueContainer.innerHTML = '';
 
@@ -180,7 +187,8 @@ class ChamaSenhaDoctorApp {
           const pill = document.createElement('button');
           pill.className = `queue-item-pill ${t.type === 'PRIORIDADE' ? 'prioridade' : ''}`;
           pill.title = `Clique para chamar ${t.id} agora`;
-          pill.innerHTML = `<strong>${t.id}</strong> <span>(${t.type === 'PRIORIDADE' ? 'Prioritária' : 'Normal'})</span>`;
+          const nameStr = t.patientName ? ` - ${t.patientName}` : '';
+          pill.innerHTML = `<strong>${t.id}</strong> <span>(${t.type === 'PRIORIDADE' ? 'Prioritária' : 'Normal'}${nameStr})</span>`;
           pill.addEventListener('click', () => this.chamarSenhaEspecifica(t.id));
           this.dom.doctorQueueContainer.appendChild(pill);
         });
@@ -190,44 +198,53 @@ class ChamaSenhaDoctorApp {
 
   chamarProximoPaciente() {
     const payloadData = { destination: this.selectedRoom };
-
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ type: 'CALL_NEXT', payload: payloadData }));
-    }
-
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({ type: 'CALL_NEXT', payload: payloadData });
-    }
-
+    this.sendEvent('CALL_NEXT', payloadData);
     this.animateCard();
   }
 
   chamarSenhaEspecifica(ticketId) {
     const payloadData = { destination: this.selectedRoom, specificTicketId: ticketId };
-
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ type: 'CALL_NEXT', payload: payloadData }));
-    }
-
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({ type: 'CALL_NEXT', payload: payloadData });
-    }
-
+    this.sendEvent('CALL_NEXT', payloadData);
     this.animateCard();
   }
 
   repetirChamada() {
     const payloadData = { destination: this.selectedRoom };
-
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ type: 'REPEAT_CALL', payload: payloadData }));
-    }
-
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({ type: 'REPEAT_CALL', payload: payloadData });
-    }
-
+    this.sendEvent('REPEAT_CALL', payloadData);
     this.animateCard();
+  }
+
+  iniciarAtendimento() {
+    const ticketId = this.dom.senhaAtualNumero?.textContent;
+    if (ticketId && ticketId !== 'N000') {
+      this.sendEvent('START_SERVICE', { ticketId });
+      if (this.dom.displayTypeBadge) this.dom.displayTypeBadge.textContent = 'Em Atendimento...';
+    }
+  }
+
+  finalizarAtendimento() {
+    const ticketId = this.dom.senhaAtualNumero?.textContent;
+    if (ticketId && ticketId !== 'N000') {
+      this.sendEvent('COMPLETE_SERVICE', { ticketId });
+      if (this.dom.displayTypeBadge) this.dom.displayTypeBadge.textContent = 'Atendimento Concluído';
+    }
+  }
+
+  marcarAusente() {
+    const ticketId = this.dom.senhaAtualNumero?.textContent;
+    if (ticketId && ticketId !== 'N000') {
+      this.sendEvent('MARK_ABSENT', { ticketId });
+      if (this.dom.displayTypeBadge) this.dom.displayTypeBadge.textContent = 'Paciente Ausente';
+    }
+  }
+
+  sendEvent(type, payloadData) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type, payload: payloadData }));
+    }
+    if (this.broadcastChannel) {
+      this.broadcastChannel.postMessage({ type, payload: payloadData });
+    }
   }
 
   animateCard() {
